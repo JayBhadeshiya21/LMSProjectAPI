@@ -1,0 +1,61 @@
+﻿@model List<Enrollment>
+
+@{
+    ViewData["Title"] = "Enrollment List";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-4">
+            <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Enrollments</li>
+        </ol>
+    </nav>
+
+    <!-- Page Title -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold">Enrollment List</h4>
+        <a asp-controller="Enrollment" asp-action="AddEdit" class="btn btn-success">
+            <i class="bx bx-plus"></i> Add New Enrollment
+        </a>
+    </div>
+
+    <!-- Enrollment Table -->
+    <div class="card">
+        <div class="table-responsive text-nowrap">
+            <table class="table">
+                <thead class="table-light">
+                    <tr>
+                        <th>Enrollment ID</th>
+                        <th>Student ID</th>
+                        <th>Course ID</th>
+                        <th>Enrollment Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="table-border-bottom-0">
+                    @foreach (var enrollment in Model)
+                    {
+                        <tr>
+                            <td>@enrollment.EnrollmentId</td>
+                            <td>@enrollment.StudentId</td>
+                            <td>@enrollment.CourseId</td>
+                            <td>@enrollment.EnrolledOn.ToString("yyyy-MM-dd")</td>
+                            <td>
+                                <a asp-controller="Enrollment" asp-action="AddEdit" asp-route-id="@enrollment.EnrollmentId" class="btn btn-sm btn-outline-warning me-1">
+                                    <i class="bx bx-edit-alt"></i> Edit
+                                </a>
+                                <a asp-controller="Enrollment" asp-action="Delete" asp-route-id="@enrollment.EnrollmentId" class="btn btn-sm btn-outline-danger">
+                                    <i class="bx bx-trash"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>

@@ -1,0 +1,74 @@
+﻿@model List<UserModel>
+@{
+    ViewData["Title"] = "User List";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-4">
+            <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Users</li>
+        </ol>
+    </nav>
+
+    <!-- Page Title -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold">User List</h4>
+        <a href="./User/AddEdit" class="btn btn-success">
+            <i class="bx bx-plus"></i> Add New User
+        </a>
+    </div>
+
+    <!-- User Table Card -->
+    <div class="card">
+        <div class="table-responsive text-nowrap">
+            <table class="table">
+                <thead class="table-light">
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Password</th>
+                        <th>Role</th>
+                        <th>Created At</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="table-border-bottom-0">
+                    @foreach (var user in Model)
+                    {
+                        <tr>
+                            <td><strong>@user.FullName</strong></td>
+                            <td>@user.Email</td>
+                            <td>@user.Password</td>
+                            <td>@user.Role</td>
+                            <td>@user.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                @if (user.Status)
+                                {
+                                    <span class="badge bg-label-success me-1">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-label-secondary me-1">Inactive</span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="AddEdit" asp-route-id="@user.UserId" class="btn btn-sm btn-outline-warning me-1">
+                                    <i class="bx bx-edit-alt"></i> Edit
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@user.UserId" class="btn btn-sm btn-outline-danger">
+                                    <i class="bx bx-trash"></i> Delete
+                                </a>
+                            </td>
+
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
