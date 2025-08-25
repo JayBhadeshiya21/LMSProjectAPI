@@ -29,6 +29,31 @@
     <link rel="stylesheet" href="~/../assets/vendor/libs/apex-charts/apex-charts.css" />
 
     <!-- Page CSS -->
+    <!-- Custom CSS for image handling -->
+    <style>
+        .course-image {
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+            .course-image:hover {
+                transform: scale(1.05);
+                transition: transform 0.2s ease;
+            }
+
+        .image-error {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+    </style>
+
     <!-- Helpers -->
     <script src="~/../assets/vendor/js/helpers.js"></script>
 
@@ -70,7 +95,7 @@
 
                     <!-- Courses -->
                     <li class="menu-item">
-                        <a class="menu-link" asp-controller="Course" asp-action="Index" >
+                        <a class="menu-link" asp-controller="Course" asp-action="Index">
                             <i class="menu-icon tf-icons bx bx-book-bookmark"></i>
                             <div>Courses</div>
                         </a>
@@ -86,16 +111,16 @@
 
                     <!-- Enrollments -->
                     <li class="menu-item">
-                        <a class="menu-link" asp-controller="Enrollment" asp-action="Index" >
+                        <a class="menu-link" asp-controller="Enrollment" asp-action="Index">
                             <i class="menu-icon tf-icons bx bx-check-circle"></i>
                             <div>Enrollments</div>
                         </a>
                     </li>
 
                     <!-- Feedback -->
-                    <li class="menu-item">
-                        <a href="#" class="menu-link">
-                            <i class="menu-icon tf-icons bx bx-comment-detail"></i>
+                    <li class="menu-item" a>
+                        <a class="menu-link" asp-controller="Feedback" asp-action="Index">
+                            <i class="menu-icon tf-icons b bx-comment-detail"></i>
                             <div>Feedback</div>
                         </a>
                     </li>
@@ -129,7 +154,7 @@
                                     <div class="d-flex">
                                         <div class="flex-shrink-0 me-3">
                                             <div class="avatar avatar-online">
-                                                <img src="../assets/img/avatars/1.png"  class="w-px-40 h-auto rounded-circle">
+                                                <img src="../assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle">
                                             </div>
                                         </div>
                                         <div class="flex-grow-1">
@@ -144,7 +169,7 @@
                                             <div class="d-flex">
                                                 <div class="flex-shrink-0 me-3">
                                                     <div class="avatar avatar-online">
-                                                        <img src="../assets/img/avatars/1.png"  class="w-px-40 h-auto rounded-circle">
+                                                        <img src="../assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle">
                                                     </div>
                                                 </div>
                                                 <div class="flex-grow-1">

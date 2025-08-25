@@ -11,7 +11,11 @@ namespace LMSProjectFontend.Models
 
         public int? StudentId { get; set; }
 
+        public string? studentName { get; set; }
+
         public int? CourseId { get; set; }
+
+        public string? courseName { get; set; }
 
         public DateTime EnrolledOn { get; set; }
     }

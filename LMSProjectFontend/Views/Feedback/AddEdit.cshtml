@@ -1,0 +1,65 @@
+﻿@model Feedback
+
+@{
+    ViewData["Title"] = Model.FeedbackId == 0 ? "Add Feedback" : "Edit Feedback";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4>@ViewData["Title"]</h4>
+                </div>
+                <div class="card-body">
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger">@TempData["Error"]</div>
+                    }
+
+                    <form asp-action="AddEdit" method="post">
+                        @if (Model.FeedbackId != 0)
+                        {
+                            <input type="hidden" asp-for="FeedbackId" />
+                        }
+
+                        <div class="mb-3">
+                            <label asp-for="StudentId" class="form-label">Student ID</label>
+                            <input asp-for="StudentId" class="form-control" />
+                            <span asp-validation-for="StudentId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="CourseId" class="form-label">Course ID</label>
+                            <input asp-for="CourseId" class="form-control" />
+                            <span asp-validation-for="CourseId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="comments" class="form-label">Comment</label>
+                            <textarea asp-for="comments" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="comments" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Rating" class="form-label">Rating (1 to 5)</label>
+                            <input asp-for="Rating" class="form-control" type="number" min="1" max="5" />
+                            <span asp-validation-for="Rating" class="text-danger"></span>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-success">Save</button>
+                            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

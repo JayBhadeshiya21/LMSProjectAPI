@@ -5,7 +5,12 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using FluentValidation.AspNetCore;
 using LMSProjectAPI;
-using FluentValidation; // adjust namespace as per your actual project
+using FluentValidation;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.Server.IIS;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.AspNetCore.Http.Features;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -98,6 +103,21 @@ app.UseCors("AllowLocalhost");
 // ✅ Enable Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseStaticFiles();
+
+// ✅ Configure static file serving for uploaded images
+var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+}
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/uploads"
+});
+
 
 // ✅ Map Controllers
 app.MapControllers();

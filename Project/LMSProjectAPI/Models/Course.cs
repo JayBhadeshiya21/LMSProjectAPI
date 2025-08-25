@@ -31,7 +31,6 @@ public class Course
     public virtual User? Teacher { get; set; }
 }
 
-
 public static class ImageHelper
 {
     public static string directory = "Images";
@@ -71,3 +70,25 @@ public static class ImageHelper
         }
     }
 }
+
+public class CourseDto
+{
+    public string? Title { get; set; }
+    public string? Description { get; set; }
+    public int? TeacherId { get; set; }
+    public DateTime? CreatedAt { get; set; }
+
+    [NotMapped]
+    public IFormFile? Image { get; set; }
+
+    public string? ImagePath { get; set; } // Optional
+}
+
+public sealed class TeacherDropdownDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+}
+
+
+

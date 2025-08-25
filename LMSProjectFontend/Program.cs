@@ -1,4 +1,9 @@
-﻿namespace LMSProjectFontend
+﻿using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.Server.IIS;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.AspNetCore.Http.Features;
+
+namespace LMSProjectFontend
 {
     public class Program
     {
@@ -21,6 +26,25 @@
                 options.IdleTimeout = TimeSpan.FromMinutes(60); // Session expiry
             });
 
+            // ✅ Configure file upload limits
+            builder.Services.Configure<IISServerOptions>(options =>
+            {
+                options.MaxRequestBodySize = 52428800; // 50MB
+            });
+
+            builder.Services.Configure<KestrelServerOptions>(options =>
+            {
+                options.Limits.MaxRequestBodySize = 52428800; // 50MB
+            });
+
+            // ✅ Configure form options for file uploads
+            builder.Services.Configure<FormOptions>(options =>
+            {
+                options.MultipartBodyLengthLimit = 52428800; // 50MB
+                options.ValueLengthLimit = int.MaxValue;
+                options.MultipartHeadersLengthLimit = int.MaxValue;
+            });
+
             var app = builder.Build();
 
             app.UseSession();   
@@ -28,6 +52,19 @@
             app.UseHttpsRedirection();
 
             app.UseStaticFiles();
+
+            // ✅ Configure static file serving for uploaded images
+            var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            if (!Directory.Exists(uploadsPath))
+            {
+                Directory.CreateDirectory(uploadsPath);
+            }
+
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(uploadsPath),
+                RequestPath = "/uploads"
+            });
 
             app.UseRouting();
 

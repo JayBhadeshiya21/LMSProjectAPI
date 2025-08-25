@@ -16,10 +16,27 @@
     <!-- Page Title -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="fw-bold">User List</h4>
-        <a href="./User/AddEdit" class="btn btn-success">
+        <a asp-controller="User" asp-action="AddEdit"  class="btn btn-success">
             <i class="bx bx-plus"></i> Add New User
         </a>
     </div>
+
+    <!-- Alert Messages -->
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
     <!-- User Table Card -->
     <div class="card">
@@ -36,7 +53,7 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody class="table-border-bottom-0">
+                <tbody id="courseTableBody" class="table-border-bottom-0">
                     @foreach (var user in Model)
                     {
                         <tr>
@@ -56,10 +73,10 @@
                                 }
                             </td>
                             <td>
-                                <a asp-action="AddEdit" asp-route-id="@user.UserId" class="btn btn-sm btn-outline-warning me-1">
+                                <a asp-controller="User" asp-action="AddEdit" asp-route-id="@user.UserId" class="btn btn-sm btn-outline-warning me-1">
                                     <i class="bx bx-edit-alt"></i> Edit
                                 </a>
-                                <a asp-action="Delete" asp-route-id="@user.UserId" class="btn btn-sm btn-outline-danger">
+                                <a asp-controller="User" asp-action="Delete" asp-route-id="@user.UserId" class="btn btn-sm btn-outline-danger">
                                     <i class="bx bx-trash"></i> Delete
                                 </a>
                             </td>
@@ -69,6 +86,77 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- 🔹 Pagination -->
+        <nav aria-label="User pagination">
+            <ul class="pagination justify-content-center mt-3" id="pagination"></ul>
+        </nav>
     </div>
 
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const rowsPerPage = 5;
+        const tableBody = document.getElementById("courseTableBody");
+        const rows = tableBody.querySelectorAll("tr");
+        const totalRows = rows.length;
+        const totalPages = Math.ceil(totalRows / rowsPerPage);
+        const pagination = document.getElementById("pagination");
+
+        function showPage(page) {
+            let start = (page - 1) * rowsPerPage;
+            let end = start + rowsPerPage;
+
+            rows.forEach((row, index) => {
+                row.style.display = (index >= start && index < end) ? "" : "none";
+            });
+
+            pagination.querySelectorAll("li").forEach(li => li.classList.remove("active"));
+            pagination.querySelector(`[data-page='${page}']`)?.classList.add("active");
+        }
+
+        function createPagination() {
+            pagination.innerHTML = "";
+
+            pagination.innerHTML += `
+                <li class="page-item"><a class="page-link" href="#" id="prev">Previous</a></li>
+            `;
+
+            for (let i = 1; i <= totalPages; i++) {
+                pagination.innerHTML += `
+                    <li class="page-item" data-page="${i}">
+                        <a class="page-link" href="#">${i}</a>
+                    </li>
+                `;
+            }
+
+            pagination.innerHTML += `
+                <li class="page-item"><a class="page-link" href="#" id="next">Next</a></li>
+            `;
+
+            pagination.querySelectorAll("a").forEach(a => {
+                a.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    let page = this.parentElement.getAttribute("data-page");
+
+                    if (this.id === "prev") {
+                        let current = pagination.querySelector(".active")?.getAttribute("data-page");
+                        page = Math.max(1, parseInt(current) - 1);
+                    }
+                    if (this.id === "next") {
+                        let current = pagination.querySelector(".active")?.getAttribute("data-page");
+                        page = Math.min(totalPages, parseInt(current) + 1);
+                    }
+
+                    showPage(page);
+                });
+            });
+        }
+
+        if (totalPages > 1) {
+            createPagination();
+            showPage(1);
+        }
+    });
+</script>

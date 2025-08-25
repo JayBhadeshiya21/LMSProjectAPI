@@ -20,3 +20,15 @@ public partial class Feedback
     [JsonIgnore]
     public virtual User? Student { get; set; }
 }
+
+public class FeedbackDto
+{
+    public int FeedbackId { get; set; }
+    public string? Comments { get; set; }
+    public int? Rating { get; set; }
+    public int CourseId { get; set; }
+    public string? CourseName { get; set; }
+    public int StudentId { get; set; }
+    public string? StudentName { get; set; }
+    public DateTime? CreatedAt { get; set; }
+}

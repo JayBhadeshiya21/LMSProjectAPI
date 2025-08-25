@@ -110,6 +110,25 @@ namespace LMSProjectFontend.Controllers
 
         #endregion
 
+        #region Delete
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                var response = await _client.DeleteAsync($"EnrollmentAPI/{id}");
+                response.EnsureSuccessStatusCode();
+
+                TempData["Success"] = "Enrollment deleted successfully.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error occurred while deleting user with ID {id}.");
+                TempData["Error"] = "Unable to delete Enrollment.";
+            }
+            return RedirectToAction("Index", "Enrollment");
+        }
+        #endregion
+
 
     }
 }

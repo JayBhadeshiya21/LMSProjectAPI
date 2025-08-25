@@ -9,7 +9,7 @@
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-4">
-            <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Dashboard</a></li>
             <li class="breadcrumb-item active" aria-current="page">Courses</li>
         </ol>
     </nav>
@@ -22,10 +22,27 @@
         </a>
     </div>
 
+    @* Delete Message  *@
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+
     <!-- Course Table -->
     <div class="card">
         <div class="table-responsive text-nowrap">
-            <table class="table">
+            <table id="courseTable" class="table table-bordered">
                 <thead class="table-light">
                     <tr>
                         <th>Course Title</th>
@@ -36,16 +53,36 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody class="table-border-bottom-0">
+                <tbody id="courseTableBody" class="table-border-bottom-0">
                     @foreach (var course in Model)
                     {
                         <tr>
                             <td><strong>@course.Title</strong></td>
                             <td>@course.Description</td>
-                            <td>@course.TeacherId</td>
-                            @* <td>
-                                <img src="@course.ImageUrl" alt="Course Image" width="60" height="40" class="rounded" />
-                            </td> *@
+                            <td>@course.TeacherName</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(course.ImageUrl))
+                                {
+                                    <div class="position-relative">
+                                        <img src="@course.ImageUrl" alt="@course.Title" class="img-thumbnail course-image" style="max-height: 100px; max-width: 100px; object-fit: cover;"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="image-error position-absolute top-0 start-0" style="display: none; height: 100px; width: 100px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 0.375rem;">
+                                            <div class="d-flex align-items-center justify-content-center h-100">
+                                                <i class="bx bx-image fs-4 text-muted"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="image-error" style="height: 100px; width: 100px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 0.375rem;">
+                                        <div class="d-flex align-items-center justify-content-center h-100">
+                                            <i class="bx bx-image fs-4 text-muted"></i>
+                                        </div>
+                                    </div>
+                                }
+                            </td>
+
                             <td>@course.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
                             <td>
                                 <a asp-controller="Course" asp-action="AddEdit" asp-route-id="@course.CourseId" class="btn btn-sm btn-outline-warning me-1">
@@ -62,4 +99,89 @@
         </div>
     </div>
 
+    <!-- Pagination Controls -->
+    <nav>
+        <ul id="pagination" class="pagination justify-content-center mt-3"></ul>
+    </nav>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Image error handling
+        const images = document.querySelectorAll('.course-image');
+        images.forEach(img => {
+            img.addEventListener('error', function() {
+                this.style.display = 'none';
+                const errorDiv = this.nextElementSibling;
+                if (errorDiv && errorDiv.classList.contains('image-error')) {
+                    errorDiv.style.display = 'flex';
+                }
+            });
+        });
+
+        // Pagination functionality
+        const rowsPerPage = 5;
+        const tableBody = document.getElementById("courseTableBody");
+        const rows = tableBody.querySelectorAll("tr");
+        const totalRows = rows.length;
+        const totalPages = Math.ceil(totalRows / rowsPerPage);
+        const pagination = document.getElementById("pagination");
+
+        function showPage(page) {
+            let start = (page - 1) * rowsPerPage;
+            let end = start + rowsPerPage;
+
+            rows.forEach((row, index) => {
+                row.style.display = (index >= start && index < end) ? "" : "none";
+            });
+
+            // highlight active button
+            pagination.querySelectorAll("li").forEach(li => li.classList.remove("active"));
+            pagination.querySelector(`[data-page='${page}']`)?.classList.add("active");
+        }
+
+        function createPagination() {
+            pagination.innerHTML = "";
+
+            // Prev button
+            pagination.innerHTML += `
+                <li class="page-item"><a class="page-link" href="#" id="prev">Previous</a></li>
+            `;
+
+            for (let i = 1; i <= totalPages; i++) {
+                pagination.innerHTML += `
+                    <li class="page-item" data-page="${i}">
+                        <a class="page-link" href="#">${i}</a>
+                    </li>
+                `;
+            }
+
+            // Next button
+            pagination.innerHTML += `
+                <li class="page-item"><a class="page-link" href="#" id="next">Next</a></li>
+            `;
+
+            // event listeners
+            pagination.querySelectorAll("a").forEach(a => {
+                a.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    let page = this.parentElement.getAttribute("data-page");
+
+                    if (this.id === "prev") {
+                        let current = pagination.querySelector(".active")?.getAttribute("data-page");
+                        page = Math.max(1, parseInt(current) - 1);
+                    }
+                    if (this.id === "next") {
+                        let current = pagination.querySelector(".active")?.getAttribute("data-page");
+                        page = Math.min(totalPages, parseInt(current) + 1);
+                    }
+
+                    showPage(page);
+                });
+            });
+        }
+
+        createPagination();
+        showPage(1); // show first page
+    });
+</script>

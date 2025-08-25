@@ -22,10 +22,7 @@ namespace LMSProjectAPI.Validation
 
             RuleFor(course => course.ImageUrl)
                 .NotEmpty()
-                .WithMessage("Enter Image Url !");
-
-            
-            
+                .WithMessage("Enter Image Url !");  
         }
     }
 }

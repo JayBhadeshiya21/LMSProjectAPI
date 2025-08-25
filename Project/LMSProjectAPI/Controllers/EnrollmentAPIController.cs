@@ -18,18 +18,35 @@ public class EnrollmentAPIController : ControllerBase
 
     #region GetAllEnrollments
     [HttpGet("All")]
-    public async Task<ActionResult<IEnumerable<Enrollment>>> GetAllEnrollments()
+    public async Task<ActionResult<IEnumerable<EnrollmentDto>>> GetAllEnrollments()
     {
         try
         {
-            var enrollments = await _context.Enrollments.ToListAsync();
+            var enrollments = await (from e in _context.Enrollments
+                                     join c in _context.Courses on e.CourseId equals c.CourseId
+                                     join u in _context.Users on e.StudentId equals u.UserId
+                                     select new EnrollmentDto
+                                     {
+                                         EnrollmentId = e.EnrollmentId,
+                                         CourseId = c.CourseId,
+                                         CourseName = c.Title,
+                                         StudentId = u.UserId,
+                                         StudentName = u.FullName,
+                                         EnrolledOn = e.EnrolledOn
+                                     }).ToListAsync();
+
             return Ok(enrollments);
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "Error occurred while retrieving enrollments.", error = ex.Message });
+            return StatusCode(500, new
+            {
+                message = "Error occurred while retrieving enrollments.",
+                error = ex.Message
+            });
         }
     }
+
     #endregion
 
     #region GetEnrollmentById

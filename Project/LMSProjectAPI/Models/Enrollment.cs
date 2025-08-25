@@ -10,7 +10,11 @@ public partial class Enrollment
 
     public int? StudentId { get; set; }
 
+    public string? StudentName { get; set; }
+
     public int? CourseId { get; set; }
+
+    public string? CourseName { get; set; }
 
     public DateTime? EnrolledOn { get; set; }
 
@@ -20,3 +24,15 @@ public partial class Enrollment
     [JsonIgnore]
     public virtual User? Student { get; set; }
 }
+
+
+public class EnrollmentDto
+{
+    public int EnrollmentId { get; set; }
+    public int CourseId { get; set; }
+    public string? CourseName { get; set; }
+    public int StudentId { get; set; }
+    public string? StudentName { get; set; }
+    public DateTime? EnrolledOn { get; set; }
+}
+

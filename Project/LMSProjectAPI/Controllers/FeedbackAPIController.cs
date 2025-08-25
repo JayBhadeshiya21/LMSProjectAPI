@@ -18,18 +18,37 @@ public class FeedbackAPIController : ControllerBase
 
     #region GetAllFeedback
     [HttpGet("All")]
-    public async Task<ActionResult<IEnumerable<Feedback>>> GetAllFeedback()
+    public async Task<ActionResult<IEnumerable<FeedbackDto>>> GetAllFeedback()
     {
         try
         {
-            var feedbacks = await _context.Feedbacks.ToListAsync();
+            var feedbacks = await (from f in _context.Feedbacks
+                                   join c in _context.Courses on f.CourseId equals c.CourseId
+                                   join u in _context.Users on f.StudentId equals u.UserId
+                                   select new FeedbackDto
+                                   {
+                                       FeedbackId = f.FeedbackId,
+                                       Comments = f.Comment,
+                                       Rating = f.Rating,
+                                       CourseId = c.CourseId,
+                                       CourseName = c.Title,
+                                       StudentId = u.UserId,
+                                       StudentName = u.FullName, 
+                                       CreatedAt = f.CreatedAt
+                                   }).ToListAsync();
+
             return Ok(feedbacks);
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "Error occurred while retrieving feedbacks.", error = ex.Message });
+            return StatusCode(500, new
+            {
+                message = "Error occurred while retrieving feedbacks.",
+                error = ex.Message
+            });
         }
     }
+
     #endregion
 
     #region GetFeedbackById

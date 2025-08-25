@@ -51,6 +51,7 @@ namespace LMSProjectFontend.Controllers
 
             try
             {
+                AddJwtToken();
                 var response = await _client.GetAsync($"UserAPI/{id}");
                 response.EnsureSuccessStatusCode();
                 var json = await response.Content.ReadAsStringAsync();
@@ -100,19 +101,23 @@ namespace LMSProjectFontend.Controllers
         {
             try
             {
+                AddJwtToken();
                 var response = await _client.DeleteAsync($"UserAPI/{id}");
                 response.EnsureSuccessStatusCode();
+
+                TempData["Success"] = "User deleted successfully.";
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error occurred while deleting user with ID {id}.");
                 TempData["Error"] = "Unable to delete user.";
             }
-            return RedirectToAction("Index");
+            return RedirectToAction("Index","User");
         }
         #endregion
 
         #region AddAndEdit
+
 
         [HttpPost]
         public async Task<IActionResult> AddEdit(UserModel user)
@@ -125,6 +130,7 @@ namespace LMSProjectFontend.Controllers
 
             try
             {
+                AddJwtToken();
                 var jsonData = JsonConvert.SerializeObject(user);
                 var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
 
@@ -134,10 +140,12 @@ namespace LMSProjectFontend.Controllers
                 {
                     user.UserId = 0;
                     user.CreatedAt = DateTime.Now;
+                    AddJwtToken();
                     response = await _client.PostAsync("UserAPI/", content);
                 }
                 else
                 {
+                    AddJwtToken();
                     response = await _client.PutAsync($"UserAPI/{user.UserId}", content);
                 }
 
