@@ -24,15 +24,15 @@ namespace LMSProjectFontend.Controllers
         #endregion
 
         #region GetAll Course
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 5)
         {
             try
             {
-                // 🔹 Get all courses
-                var response = await _client.GetAsync("CourseAPI");
+                // 🔹 Get paged courses
+                var response = await _client.GetAsync($"CourseAPI/GetPaged?pageNumber={pageNumber}&pageSize={pageSize}");
                 response.EnsureSuccessStatusCode();
                 var json = await response.Content.ReadAsStringAsync();
-                var courses = JsonConvert.DeserializeObject<List<CourseModel>>(json);
+                var pagedCourses = JsonConvert.DeserializeObject<PagedResponse<CourseModel>>(json) ?? new PagedResponse<CourseModel>();
 
                 // 🔹 Get teachers (dropdown API)
                 var teacherResponse = await _client.GetAsync("CourseAPI/dropdown");
@@ -41,7 +41,7 @@ namespace LMSProjectFontend.Controllers
                 var teachers = JsonConvert.DeserializeObject<List<TeacherDropdownDto>>(teacherJson);
 
                 // 🔹 Map TeacherName into courses
-                foreach (var course in courses)
+                foreach (var course in pagedCourses.Data)
                 {
                     var teacher = teachers.FirstOrDefault(t => t.Id == course.TeacherId);
                     course.TeacherName = teacher?.Name ?? "Unknown Teacher";
@@ -69,20 +69,20 @@ namespace LMSProjectFontend.Controllers
                 if (!string.IsNullOrEmpty(newImagePath) && !string.IsNullOrEmpty(updatedCourseId))
                 {
                     var courseId = int.Parse(updatedCourseId);
-                    var updatedCourse = courses.FirstOrDefault(c => c.CourseId == courseId);
+                    var updatedCourse = pagedCourses.Data.FirstOrDefault(c => c.CourseId == courseId);
                     if (updatedCourse != null)
                     {
                         updatedCourse.ImageUrl = newImagePath;
                     }
                 }
 
-                return View(courses); // 🔹 Pass list of courses with images & teacher names
+                return View(pagedCourses); // 🔹 Pass paged courses with images & teacher names
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while fetching courses.");
                 TempData["Error"] = "Unable to load courses.";
-                return View(new List<CourseModel>());
+                return View(new PagedResponse<CourseModel>());
             }
         }
 
@@ -331,6 +331,23 @@ namespace LMSProjectFontend.Controllers
             }
         }
         #endregion
+
+        public async Task<IActionResult> Indexed(int pageNumber = 1, int pageSize = 5)
+        {
+            var response = await _client.GetAsync($"CourseAPI/GetAll?pageNumber={pageNumber}&pageSize={pageSize}");
+            if (!response.IsSuccessStatusCode)
+            {
+                TempData["Error"] = "Unable to fetch courses";
+                return View(new PagedResponse<CourseModel>());
+            }
+
+            var jsonString = await response.Content.ReadAsStringAsync();
+            var coursesPaged = JsonConvert.DeserializeObject<PagedResponse<CourseModel>>(jsonString);
+
+            return View(coursesPaged); // ✅ send PagedResponse not List
+        }
+
+
     }
 }
 

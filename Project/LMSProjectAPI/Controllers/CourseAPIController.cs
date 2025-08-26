@@ -265,6 +265,40 @@ public class CourseAPIController : ControllerBase
     }
     #endregion
 
+    #region Pagination
+    [HttpGet("GetPaged")]
+    public async Task<IActionResult> GetPagedCourses(int pageNumber = 1, int pageSize = 10)
+    {
+        try
+        {
+            var query = _context.Courses.AsQueryable();
+
+            // Total records
+            var totalRecords = await query.CountAsync();
+
+            // Paginated data
+            var courses = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            // Return with pagination info
+            return Ok(new
+            {
+                totalRecords,
+                pageNumber,
+                pageSize,
+                totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize),
+                data = courses
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error retrieving paged courses", error = ex.Message });
+        }
+    }
+
+    #endregion
 }
 
 
