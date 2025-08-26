@@ -19,6 +19,7 @@ public class CourseAPIController : ControllerBase
     }
     #endregion
 
+
     #region GetAllCourse
     [HttpGet]
     public async Task<ActionResult<IEnumerable<object>>> GetAllCourse()
