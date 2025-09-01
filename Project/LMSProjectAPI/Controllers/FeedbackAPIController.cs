@@ -15,7 +15,7 @@ public class FeedbackAPIController : ControllerBase
         _context = context;
     }
     #endregion
-
+     
     #region GetAllFeedback
     [HttpGet("All")]
     public async Task<ActionResult<IEnumerable<FeedbackDto>>> GetAllFeedback()
@@ -184,6 +184,4 @@ public class FeedbackAPIController : ControllerBase
         }
     }
     #endregion
-
-
 }
