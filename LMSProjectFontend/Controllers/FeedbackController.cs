@@ -1,5 +1,7 @@
 ﻿using System.Text;
+using LMSProjectFontend.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
 
 namespace LMSProjectFontend.Controllers
@@ -26,6 +28,22 @@ namespace LMSProjectFontend.Controllers
         {
             try
             {
+                // 🔹 Get courses (dropdown API)
+                var courseResponse = await _client.GetAsync("CourseAPI/course-dropdown");
+                courseResponse.EnsureSuccessStatusCode();
+                var courseJson = await courseResponse.Content.ReadAsStringAsync();
+                var courses = JsonConvert.DeserializeObject<List<CourseDropdownDto>>(courseJson);
+
+                // 🔹 Get students (dropdown API)
+                var studentResponse = await _client.GetAsync("CourseAPI/student-dropdown");
+                studentResponse.EnsureSuccessStatusCode();
+                var studentJson = await studentResponse.Content.ReadAsStringAsync();
+                var students = JsonConvert.DeserializeObject<List<StudentDropdownDto>>(studentJson);
+
+                // 🔹 Pass to ViewBag
+                ViewBag.Teachers = new SelectList(courses, "Id", "Name");
+                ViewBag.Students = new SelectList(students, "Id", "Name");
+
                 var response = await _client.GetAsync("FeedbackAPI/All");
                 response.EnsureSuccessStatusCode();
                 var json = await response.Content.ReadAsStringAsync();
@@ -108,6 +126,49 @@ namespace LMSProjectFontend.Controllers
         }
 
         #endregion
+
+        #region Student Dropdown
+        public async Task<List<StudentDropdownDto>> GetStudentsDropdownAsync()
+        {
+            try
+            {
+                var response = await _client.GetAsync("FeedbackAPI/student-dropdown");
+                response.EnsureSuccessStatusCode();
+
+                var json = await response.Content.ReadAsStringAsync();
+                var students = JsonConvert.DeserializeObject<List<StudentDropdownDto>>(json);
+
+                return students ?? new List<StudentDropdownDto>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching student dropdown.");
+                return new List<StudentDropdownDto>();
+            }
+        }
+        #endregion
+
+        #region Course Dropdown
+        public async Task<List<CourseDropdownDto>> GetCoursesDropdownAsync()
+        {
+            try
+            {
+                var response = await _client.GetAsync("FeedbackAPI/course-dropdown"); // Course API endpoint
+                response.EnsureSuccessStatusCode();
+
+                var json = await response.Content.ReadAsStringAsync();
+                var courses = JsonConvert.DeserializeObject<List<CourseDropdownDto>>(json);
+
+                return courses ?? new List<CourseDropdownDto>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching course dropdown.");
+                return new List<CourseDropdownDto>();
+            }
+        }
+        #endregion
+
 
     }
 }

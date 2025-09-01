@@ -25,14 +25,24 @@
                         }
 
                         <div class="mb-3">
-                            <label asp-for="StudentId" class="form-label">Student ID</label>
-                            <input asp-for="StudentId" class="form-control" />
+                            <label asp-for="StudentId" class="form-label">Student</label>
+                            @Html.DropDownListFor(
+                            model => model.StudentId,
+                                                        (SelectList)ViewBag.Students,
+                                                        "-- Select Student --",
+                                                        new { @class = "form-control" }
+                                                        )
                             <span asp-validation-for="StudentId" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="CourseId" class="form-label">Course ID</label>
-                            <input asp-for="CourseId" class="form-control" />
+                            <label asp-for="CourseId" class="form-label">Course</label>
+                            @Html.DropDownListFor(
+                                                        model => model.CourseId,
+                                                        (SelectList)ViewBag.Courses,
+                                                        "-- Select Course --",
+                                                        new { @class = "form-control" }
+                                                        )
                             <span asp-validation-for="CourseId" class="text-danger"></span>
                         </div>
 

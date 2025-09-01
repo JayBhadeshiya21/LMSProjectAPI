@@ -54,10 +54,15 @@ namespace LMSProjectFontend.Controllers
                         {
                             // Keep as is
                         }
-                        // If it's a relative path, make it absolute API URL
+                        // If it's a relative path, make it absolute
+                        else if (course.ImageUrl.StartsWith("/"))
+                        {
+                            course.ImageUrl = $"http://localhost:5281{course.ImageUrl}";
+                        }
+                        // If it's just a filename, construct the full path
                         else
                         {
-                            course.ImageUrl = $"http://localhost:5281/{course.ImageUrl}";
+                            course.ImageUrl = $"http://localhost:5281/uploads/{course.ImageUrl}";
                         }
                     }
                 }
@@ -346,6 +351,148 @@ namespace LMSProjectFontend.Controllers
 
             return View(coursesPaged); // ✅ send PagedResponse not List
         }
+
+        #region Search
+        [HttpGet]
+        public async Task<IActionResult> Search(string keyword = "", int pageNumber = 1, int pageSize = 10)
+        {
+            try
+            {
+                // Try API search first
+                var searchUrl = $"CourseAPI/Search?keyword={Uri.EscapeDataString(keyword)}&pageNumber={pageNumber}&pageSize={pageSize}";
+                
+                var response = await _client.GetAsync(searchUrl);
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var searchResults = JsonConvert.DeserializeObject<PagedResponse<CourseModel>>(json) ?? new PagedResponse<CourseModel>();
+
+                    // Get teachers for mapping TeacherName
+                    var teacherResponse = await _client.GetAsync("CourseAPI/dropdown");
+                    if (teacherResponse.IsSuccessStatusCode)
+                    {
+                        var teacherJson = await teacherResponse.Content.ReadAsStringAsync();
+                        var teachers = JsonConvert.DeserializeObject<List<TeacherDropdownDto>>(teacherJson);
+
+                        // Map TeacherName into courses
+                        foreach (var course in searchResults.Data)
+                        {
+                            var teacher = teachers?.FirstOrDefault(t => t.Id == course.TeacherId);
+                            course.TeacherName = teacher?.Name ?? "Unknown Teacher";
+
+                            // Fix image URLs
+                            if (!string.IsNullOrEmpty(course.ImageUrl))
+                            {
+                                if (!course.ImageUrl.StartsWith("http"))
+                                {
+                                    if (course.ImageUrl.StartsWith("/"))
+                                    {
+                                        course.ImageUrl = $"http://localhost:5281{course.ImageUrl}";
+                                    }
+                                    else
+                                    {
+                                        course.ImageUrl = $"http://localhost:5281/uploads/{course.ImageUrl}";
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    return Json(searchResults);
+                }
+                else
+                {
+                    // Fallback: Get all courses and search locally
+                    return await LocalSearch(keyword, pageNumber, pageSize);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while searching courses via API. Falling back to local search.");
+                // Fallback to local search
+                return await LocalSearch(keyword, pageNumber, pageSize);
+            }
+        }
+
+        private async Task<IActionResult> LocalSearch(string keyword, int pageNumber, int pageSize)
+        {
+            try
+            {
+                // Get all courses
+                var response = await _client.GetAsync("CourseAPI/GetAll");
+                response.EnsureSuccessStatusCode();
+                
+                var json = await response.Content.ReadAsStringAsync();
+                var allCourses = JsonConvert.DeserializeObject<List<CourseModel>>(json) ?? new List<CourseModel>();
+
+                // Get teachers for mapping
+                var teacherResponse = await _client.GetAsync("CourseAPI/dropdown");
+                if (teacherResponse.IsSuccessStatusCode)
+                {
+                    var teacherJson = await teacherResponse.Content.ReadAsStringAsync();
+                    var teachers = JsonConvert.DeserializeObject<List<TeacherDropdownDto>>(teacherJson);
+
+                    // Map TeacherName and fix image URLs
+                    foreach (var course in allCourses)
+                    {
+                        var teacher = teachers?.FirstOrDefault(t => t.Id == course.TeacherId);
+                        course.TeacherName = teacher?.Name ?? "Unknown Teacher";
+
+                        if (!string.IsNullOrEmpty(course.ImageUrl))
+                        {
+                            if (!course.ImageUrl.StartsWith("http"))
+                            {
+                                if (course.ImageUrl.StartsWith("/"))
+                                {
+                                    course.ImageUrl = $"http://localhost:5281{course.ImageUrl}";
+                                }
+                                else
+                                {
+                                    course.ImageUrl = $"http://localhost:5281/uploads/{course.ImageUrl}";
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Filter courses based on keyword
+                var filteredCourses = allCourses;
+                if (!string.IsNullOrEmpty(keyword))
+                {
+                    var searchTerm = keyword.ToLower();
+                    filteredCourses = allCourses.Where(c => 
+                        (c.Title?.ToLower().Contains(searchTerm) ?? false) ||
+                        (c.Description?.ToLower().Contains(searchTerm) ?? false) ||
+                        (c.TeacherName?.ToLower().Contains(searchTerm) ?? false)
+                    ).ToList();
+                }
+
+                // Apply pagination
+                var totalRecords = filteredCourses.Count;
+                var totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+                var pagedCourses = filteredCourses
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                var result = new PagedResponse<CourseModel>
+                {
+                    Data = pagedCourses,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize,
+                    TotalRecords = totalRecords,
+                    TotalPages = totalPages
+                };
+
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in local search fallback");
+                return Json(new PagedResponse<CourseModel>());
+            }
+        }
+        #endregion
 
 
     }

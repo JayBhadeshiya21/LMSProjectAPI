@@ -136,4 +136,54 @@ public class FeedbackAPIController : ControllerBase
     }
     #endregion
 
+    #region Courses Dropdown
+    [HttpGet("course-dropdown")]
+    public async Task<ActionResult<IEnumerable<CourseDropdownDto>>> GetCoursesDropdown()
+    {
+        try
+        {
+            var courses = await _context.Courses
+                .Select(c => new CourseDropdownDto
+                {
+                    Id = c.CourseId,
+                    Name = c.Title
+                })
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+
+            return Ok(courses);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error occurred while fetching courses dropdown.", error = ex.Message });
+        }
+    }
+    #endregion
+
+    #region Students Dropdown
+    [HttpGet("student-dropdown")]
+    public async Task<ActionResult<IEnumerable<StudentDropdownDto>>> GetStudentsDropdown()
+    {
+        try
+        {
+            var students = await _context.StudentDetails
+                .Where(sd => sd.User != null) // only if User exists
+                .Select(sd => new StudentDropdownDto
+                {
+                    Id = sd.UserId,
+                    Name = sd.User.FullName
+                })
+                .OrderBy(s => s.Name)
+                .ToListAsync();
+
+            return Ok(students);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error occurred while fetching students dropdown.", error = ex.Message });
+        }
+    }
+    #endregion
+
+
 }

@@ -10,7 +10,6 @@ using System.ComponentModel.DataAnnotations;
 [ApiController]
 public class CourseAPIController : ControllerBase
 {
-
     #region Configuration Fields
     private readonly LmsProjectContext _context;
     public CourseAPIController(LmsProjectContext context)
@@ -18,7 +17,6 @@ public class CourseAPIController : ControllerBase
         _context = context;
     }
     #endregion
-
 
     #region GetAllCourse
     [HttpGet]
@@ -300,6 +298,67 @@ public class CourseAPIController : ControllerBase
     }
 
     #endregion
+
+    #region Search with Pagination and Join
+    [HttpGet("Search")]
+    public async Task<IActionResult> SearchCourses(string? keyword, int pageNumber = 1, int pageSize = 10)
+    {
+        try
+        {
+            // Base query with joins
+            var query = from c in _context.Courses
+                        join u in _context.Users
+                            on c.TeacherId equals u.UserId
+                        join td in _context.TeacherDetails
+                            on u.UserId equals td.UserId
+                        select new
+                        {
+                            c.CourseId,
+                            c.Title,
+                            c.Description,
+                            c.CreatedAt,
+                            c.TeacherId,
+                            c.ImageUrl,
+                            TeacherName = u.FullName,
+                            Qualification = td.Qualification,
+                            ExperienceYears = td.ExperienceYears
+                        };
+
+            // Apply search filter if keyword is provided
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                query = query.Where(c => c.Title.Contains(keyword) ||
+                                         c.Description.Contains(keyword) ||
+                                         c.TeacherName.Contains(keyword));
+            }
+
+            // Total records after filtering
+            var totalRecords = await query.CountAsync();
+
+            // Apply pagination
+            var courses = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            // Return paginated response
+            return Ok(new
+            {
+                totalRecords,
+                pageNumber,
+                pageSize,
+                totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize),
+                data = courses
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error retrieving courses", error = ex.Message });
+        }
+    }
+    #endregion
+
+
 }
 
 

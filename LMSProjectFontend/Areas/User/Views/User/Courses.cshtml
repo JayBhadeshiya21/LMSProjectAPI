@@ -1,0 +1,151 @@
+@{
+    ViewData["Title"] = "My Courses";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">My Enrolled Courses</h5>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary btn-sm">
+                        <i class="bx bx-filter-alt"></i> Filter
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm">
+                        <i class="bx bx-sort"></i> Sort
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Course Card 1 -->
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="badge bg-label-primary">In Progress</span>
+                                    <small class="text-muted">85% Complete</small>
+                                </div>
+                                <h5 class="card-title">Web Development Fundamentals</h5>
+                                <p class="card-text">Learn HTML, CSS, and JavaScript basics for building modern websites.</p>
+                                <div class="progress mb-3" style="height: 6px;">
+                                    <div class="progress-bar" role="progressbar" style="width: 85%;" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">Instructor: John Smith</small>
+                                    <button class="btn btn-primary btn-sm">Continue</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Course Card 2 -->
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="badge bg-label-success">Completed</span>
+                                    <small class="text-muted">100% Complete</small>
+                                </div>
+                                <h5 class="card-title">HTML & CSS Mastery</h5>
+                                <p class="card-text">Master the fundamentals of HTML and CSS for web development.</p>
+                                <div class="progress mb-3" style="height: 6px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">Instructor: Sarah Johnson</small>
+                                    <button class="btn btn-outline-success btn-sm">View Certificate</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Course Card 3 -->
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="badge bg-label-warning">Not Started</span>
+                                    <small class="text-muted">0% Complete</small>
+                                </div>
+                                <h5 class="card-title">Advanced JavaScript</h5>
+                                <p class="card-text">Deep dive into JavaScript ES6+, async programming, and modern frameworks.</p>
+                                <div class="progress mb-3" style="height: 6px;">
+                                    <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">Instructor: Mike Wilson</small>
+                                    <button class="btn btn-primary btn-sm">Start Course</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Course Card 4 -->
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="badge bg-label-info">In Progress</span>
+                                    <small class="text-muted">45% Complete</small>
+                                </div>
+                                <h5 class="card-title">React.js Development</h5>
+                                <p class="card-text">Build modern web applications with React.js and its ecosystem.</p>
+                                <div class="progress mb-3" style="height: 6px;">
+                                    <div class="progress-bar bg-info" role="progressbar" style="width: 45%;" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">Instructor: Lisa Chen</small>
+                                    <button class="btn btn-primary btn-sm">Continue</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Course Card 5 -->
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="badge bg-label-success">Completed</span>
+                                    <small class="text-muted">100% Complete</small>
+                                </div>
+                                <h5 class="card-title">Database Design</h5>
+                                <p class="card-text">Learn SQL, database design principles, and data modeling.</p>
+                                <div class="progress mb-3" style="height: 6px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">Instructor: David Brown</small>
+                                    <button class="btn btn-outline-success btn-sm">View Certificate</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Course Card 6 -->
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="badge bg-label-warning">Not Started</span>
+                                    <small class="text-muted">0% Complete</small>
+                                </div>
+                                <h5 class="card-title">Node.js Backend</h5>
+                                <p class="card-text">Build scalable backend applications with Node.js and Express.</p>
+                                <div class="progress mb-3" style="height: 6px;">
+                                    <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">Instructor: Alex Rodriguez</small>
+                                    <button class="btn btn-primary btn-sm">Start Course</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

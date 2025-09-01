@@ -68,6 +68,14 @@
 <body>
     <div class="login-container">
         <h2>Login</h2>
+        
+        @if (ViewBag.Error != null)
+        {
+            <div style="background-color: #ffebee; color: #c62828; padding: 10px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #ffcdd2;">
+                @ViewBag.Error
+            </div>
+        }
+        
         <form asp-action="Login" asp-controller="Login" method="post">
             <div>
                 <label>Email:</label>

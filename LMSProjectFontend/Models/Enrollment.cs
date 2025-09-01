@@ -19,5 +19,18 @@ namespace LMSProjectFontend.Models
 
         public DateTime EnrolledOn { get; set; }
     }
+
+    public class StudentDropdownDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
+
+    public class CourseDropdownDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
+
 }
 
