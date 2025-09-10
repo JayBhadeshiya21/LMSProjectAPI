@@ -13,56 +13,66 @@
                 </div>
                 <div class="card-body">
 
+                    <!-- Success/Error Messages -->
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
                     @if (TempData["Error"] != null)
                     {
-                        <div class="alert alert-danger">@TempData["Error"]</div>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
                     }
 
-                    <form asp-action="AddEdit" method="post">
-                        @if (Model.FeedbackId != 0)
-                        {
-                            <input type="hidden" asp-for="FeedbackId" />
-                        }
+                    <form asp-controller="Feedback" asp-action="AddEdit" method="post">
+                        <input type="hidden" asp-for="FeedbackId" />
 
+                        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+                        <!-- Student Dropdown -->
                         <div class="mb-3">
                             <label asp-for="StudentId" class="form-label">Student</label>
-                            @Html.DropDownListFor(
-                            model => model.StudentId,
-                                                        (SelectList)ViewBag.Students,
-                                                        "-- Select Student --",
-                                                        new { @class = "form-control" }
-                                                        )
+                            <select asp-for="StudentId" class="form-control" asp-items="ViewBag.Students">
+                                <option value="">-- Select Student --</option>
+                            </select>
                             <span asp-validation-for="StudentId" class="text-danger"></span>
                         </div>
 
+                        <!-- Course Dropdown -->
                         <div class="mb-3">
                             <label asp-for="CourseId" class="form-label">Course</label>
-                            @Html.DropDownListFor(
-                                                        model => model.CourseId,
-                                                        (SelectList)ViewBag.Courses,
-                                                        "-- Select Course --",
-                                                        new { @class = "form-control" }
-                                                        )
+                            <select asp-for="CourseId" class="form-control" asp-items="ViewBag.Courses">
+                                <option value="">-- Select Course --</option>
+                            </select>
                             <span asp-validation-for="CourseId" class="text-danger"></span>
                         </div>
 
+                        <!-- Comments -->
                         <div class="mb-3">
-                            <label asp-for="comments" class="form-label">Comment</label>
-                            <textarea asp-for="comments" class="form-control" rows="4"></textarea>
-                            <span asp-validation-for="comments" class="text-danger"></span>
+                            <label asp-for="Comment" class="form-label">Comment</label>
+                            <textarea asp-for="Comment" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Comment" class="text-danger"></span>
                         </div>
 
+                        <!-- Rating -->
                         <div class="mb-3">
                             <label asp-for="Rating" class="form-label">Rating (1 to 5)</label>
                             <input asp-for="Rating" class="form-control" type="number" min="1" max="5" />
                             <span asp-validation-for="Rating" class="text-danger"></span>
                         </div>
 
+                        <!-- Actions -->
                         <div class="text-center">
                             <button type="submit" class="btn btn-success">Save</button>
                             <a asp-action="Index" class="btn btn-secondary">Cancel</a>
                         </div>
                     </form>
+
 
                 </div>
             </div>

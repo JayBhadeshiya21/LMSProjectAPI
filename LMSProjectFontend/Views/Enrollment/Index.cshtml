@@ -45,8 +45,8 @@
                 <thead class="table-light">
                     <tr>
                         <th>Enrollment ID</th>
-                        <th>Student ID</th>
-                        <th>Course ID</th>
+                        <th>Student Name</th>
+                        <th>Course Name</th>
                         <th>Enrollment Date</th>
                         <th>Actions</th>
                     </tr>
@@ -60,12 +60,20 @@
                             <td>@enrollment.courseName</td>
                             <td>@enrollment.EnrolledOn.ToString("yyyy-MM-dd")</td>
                             <td>
-                                <a asp-controller="Enrollment" asp-action="AddEdit" asp-route-id="@enrollment.EnrollmentId" class="btn btn-sm btn-outline-warning me-1">
+                                <!-- Edit Button (GET) -->
+                                <a asp-controller="Enrollment" asp-action="AddEdit" asp-route-id="@enrollment.EnrollmentId"
+                                   class="btn btn-sm btn-outline-warning me-1">
                                     <i class="bx bx-edit-alt"></i> Edit
                                 </a>
-                                <a asp-controller="Enrollment" asp-action="Delete" asp-route-id="@enrollment.EnrollmentId" class="btn btn-sm btn-outline-danger">
-                                    <i class="bx bx-trash"></i> Delete
-                                </a>
+
+                                <!-- Delete Button (POST) -->
+                                <form asp-controller="Enrollment" asp-action="Delete" asp-route-id="@enrollment.EnrollmentId"
+                                      method="post" class="d-inline"
+                                      onsubmit="return confirm('Are you sure you want to delete this enrollment?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bx bx-trash"></i> Delete
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     }

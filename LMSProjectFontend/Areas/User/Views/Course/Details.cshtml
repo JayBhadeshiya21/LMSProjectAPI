@@ -1,0 +1,142 @@
+@{
+    var course = ViewBag.Course;
+    var teacher = ViewBag.Teacher;
+    var feedbacks = ViewBag.Feedbacks as IEnumerable<LMSProjectFontend.Models.FeedbackDisplayModel> ?? new List<LMSProjectFontend.Models.FeedbackDisplayModel>();
+    var modules = ViewBag.Modules as IEnumerable<LMSProjectFontend.Models.ModuleModel> ?? new List<LMSProjectFontend.Models.ModuleModel>();
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <!-- Course Details -->
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 mb-4 rounded-3">
+                <div class="row g-0">
+                    <div class="col-md-4">
+                        <img src="@($"http://localhost:5281/{course?.ImageUrl}")"
+                             class="img-fluid h-100 w-100 object-fit-cover rounded-start"
+                             alt="@course?.Title" />
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h3 class="card-title fw-bold mb-2">@course?.Title</h3>
+                            <p class="card-text text-muted mb-3">@course?.Description</p>
+                            <p class="mb-1">
+                                <i class="bx bx-user me-2 text-primary"></i>
+                                <strong>Teacher:</strong> @teacher?.FullName
+                            </p>
+                            <p class="mb-1">
+                                <i class="bx bx-envelope me-2 text-success"></i>
+                                <strong>Email:</strong> @teacher?.Email
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modules Section -->
+            <div class="card shadow-sm border-0 rounded-3 mb-4">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bx bx-library me-2"></i> Course Modules</h5>
+                    <span class="badge bg-primary">@modules.Count() module(s)</span>
+                </div>
+                <div class="card-body">
+                    @if (modules.Any())
+                    {
+                        <ol class="list-group list-group-numbered">
+                            @foreach (var m in modules)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div class="ms-2 me-auto">
+                                        <div class="fw-bold">@m.Title</div>
+                                        <div class="text-muted" style="white-space:pre-wrap;">@m.Content</div>
+                                        @if (!string.IsNullOrWhiteSpace(m.VideoUrl))
+                                        {
+                                            <a class="small" href="@m.VideoUrl" target="_blank">Watch video</a>
+                                        }
+                                    </div>
+                                    @if (m.OrderIndex.HasValue)
+                                    {
+                                        <span class="badge bg-secondary rounded-pill">@m.OrderIndex</span>
+                                    }
+                                </li>
+                            }
+                        </ol>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-3">
+                            <i class="bx bx-library fs-2 d-block mb-2"></i>
+                            No modules added for this course yet.
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Feedback Section -->
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bx bx-comment-detail me-2"></i> Student Feedback</h5>
+                    <span class="badge bg-primary">@feedbacks.Count() feedback(s)</span>
+                </div>
+                <div class="card-body">
+                    @if (feedbacks.Any())
+                    {
+                        foreach (var fb in feedbacks)
+                        {
+                            var name = fb?.StudentName ?? "Student";
+                            var when = fb?.CreatedAt;
+                            var commentText = fb?.Comment ?? "";
+                            var rating = fb?.Rating;
+
+                            <div class="border-bottom pb-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>@name</strong>
+                                        <small class="text-muted d-block">@(when.HasValue ? when.Value.ToString("dd MMM yyyy") : "")</small>
+                                    </div>
+                                    <div>
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (rating.HasValue && i <= rating.Value)
+                                            {
+                                                <i class="bx bxs-star text-warning fs-5"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bx bx-star text-muted fs-5"></i>
+                                            }
+                                        }
+                                        <small class="text-muted ms-2">@(rating.HasValue ? ($"{rating.Value}/5") : "No rating")</small>
+                                    </div>
+                                </div>
+                                <p class="mt-2 mb-0 text-secondary" style="white-space:pre-wrap;">@(!string.IsNullOrWhiteSpace(commentText) ? commentText : "No comment provided.")</p>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-4">
+                            <i class="bx bx-message-square-x fs-1 mb-2 d-block"></i>
+                            No feedback available for this course yet.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar (Optional: Additional Course Info / Enroll Button) -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-3 p-3">
+                <h5 class="fw-bold mb-3">Course Actions</h5>
+                <a href="@Url.Action("Enroll", "Course", new { courseId = course?.CourseId })"
+                   class="btn btn-primary w-100 mb-2">
+                    <i class="bx bx-check-circle me-2"></i> Enroll Now
+                </a>
+                <a href="@Url.Action("Index", "Course")"
+                   class="btn btn-outline-secondary w-100">
+                    <i class="bx bx-arrow-back me-2"></i> Back to Courses
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

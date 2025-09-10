@@ -1,0 +1,12 @@
+Last Date for Project completion: 05-09-2025
+
+Advance .NET | Project Completion Criteria
+-----------------------------------------------
+1. Basic CRUD with Dropdown (as and when required)			--> Done
+2. Search & Filter (min 2 screen)					--> Done	
+3. Pagination (from API)						--> Done
+4. JSON Web Token in API and MVC/React					--> Done
+5. Role Based Access control						--> Done	
+6. Ajax call(s)								--> Done
+7. File Upload in Web API (Not in MVC or other online portals) 		--> Done
+8. Dynamic Dashboard							--> Admin/User Done

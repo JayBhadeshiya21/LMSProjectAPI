@@ -4,9 +4,11 @@ using LMSProjectAPI;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class EnrollmentAPIController : ControllerBase
 {
     private readonly LmsProjectContext _context;
@@ -74,12 +76,13 @@ public class EnrollmentAPIController : ControllerBase
     {
         try
         {
+            enrollment.EnrolledOn = DateTime.Now;
             _context.Enrollments.Add(enrollment);
             await _context.SaveChangesAsync();
-            return NoContent();
+
+            return Ok(new { message = "Feedback created successfully.", data = enrollment });
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             return BadRequest(new { message = "Error occurred while inserting enrollment.", error = ex.Message });
         }
     }
@@ -87,28 +90,36 @@ public class EnrollmentAPIController : ControllerBase
 
     #region UpdateEnrollment
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateEnrollment(int id, [FromBody] Enrollment enrollment)
+    public async Task<IActionResult> UpdateEnrollment(int id, [FromBody] Enrollment dto)
     {
-        if (id != enrollment.EnrollmentId)
-            return BadRequest();
+        if (id != dto.EnrollmentId)
+            return BadRequest(new { message = "Enrollment ID mismatch." });
 
-        _context.Entry(enrollment).State = EntityState.Modified;
+        // Validate
+        if (dto.StudentId == 0 || dto.CourseId == 0 || dto.EnrolledOn == default)
+            return BadRequest(new { message = "StudentId, CourseId and EnrolledOn are required." });
 
         try
         {
+            var existingEnrollment = await _context.Enrollments.FindAsync(id);
+            if (existingEnrollment == null)
+                return NotFound(new { message = $"Enrollment with ID {id} not found." });
+
+            // Update allowed fields only
+            existingEnrollment.StudentId = dto.StudentId;
+            existingEnrollment.CourseId = dto.CourseId;
+            existingEnrollment.EnrolledOn = dto.EnrolledOn;
+
             await _context.SaveChangesAsync();
-            return NoContent();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!_context.Enrollments.Any(e => e.EnrollmentId == id))
-                return NotFound();
-            else
-                throw;
+            return Ok(new { message = "Enrollment updated successfully." });
         }
         catch (Exception ex)
         {
-            return BadRequest(new { message = $"Error occurred while updating enrollment with ID {id}.", error = ex.Message });
+            return BadRequest(new
+            {
+                message = $"Error occurred while updating enrollment with ID {id}.",
+                error = ex.Message
+            });
         }
     }
     #endregion
@@ -134,8 +145,54 @@ public class EnrollmentAPIController : ControllerBase
     }
     #endregion
 
- 
+    #region Courses Dropdown
+    [HttpGet("courses-dropdown")]
+    public async Task<ActionResult<IEnumerable<CourseDropdownDto>>> GetCoursesDropdown()
+    {
+        try
+        {
+            var courses = await _context.Courses
+                .Select(c => new CourseDropdownDto
+                {
+                    Id = c.CourseId,
+                    Name = c.Title
+                })
+                .OrderBy(c => c.Name)
+                .ToListAsync();
 
+            return Ok(courses);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error occurred while fetching courses dropdown.", error = ex.Message });
+        }
+    }
+    #endregion
 
+    #region Students Dropdown
+    [HttpGet("student-dropdown")]
+    public async Task<ActionResult<IEnumerable<StudentDropdownDto>>> GetStudentsDropdown()
+    {
+        try
+        {
+            var students = await _context.Users
+                .Where(u => u.Role == "Student") // ✅ filter only students
+                .Select(u => new StudentDropdownDto
+                {
+                    Id = u.UserId,
+                    Name = u.FullName
+                })
+                .OrderBy(s => s.Name)
+                .ToListAsync();
+
+            return Ok(students);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error occurred while fetching students dropdown.", error = ex.Message });
+        }
+    }
+    #endregion
 
 }
+

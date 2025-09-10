@@ -1,6 +1,8 @@
-﻿using System.Net.Http;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using LMSProjectFontend.Models;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace LMSProjectFontend
@@ -12,6 +14,7 @@ namespace LMSProjectFontend
         public AuthService()
         {
             _httpClient = new HttpClient();
+            _httpClient.BaseAddress = new Uri("http://localhost:5281/api/");
         }
 
         public async Task<string?> AuthenticateUserAsync(string email, string password, string role)
@@ -24,7 +27,7 @@ namespace LMSProjectFontend
             };
 
             var content = new StringContent(JsonConvert.SerializeObject(requestData), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync("http://localhost:5281/api/UserAPI/login", content);
+            var response = await _httpClient.PostAsync("UserAPI/login", content);
 
             if (response.IsSuccessStatusCode)
             {
@@ -34,5 +37,4 @@ namespace LMSProjectFontend
             return null;
         }
     }
-
 }

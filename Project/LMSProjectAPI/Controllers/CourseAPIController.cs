@@ -5,9 +5,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class CourseAPIController : ControllerBase
 {
     #region Configuration Fields
@@ -29,6 +31,7 @@ public class CourseAPIController : ControllerBase
                                      on c.TeacherId equals u.UserId
                                  join td in _context.TeacherDetails
                                      on u.UserId equals td.UserId
+                                 orderby c.CourseId ascending
                                  select new
                                  {
                                      c.CourseId,
@@ -41,6 +44,7 @@ public class CourseAPIController : ControllerBase
                                      Qualification = td.Qualification, // extra from TeacherDetail
                                      ExperienceYears = td.ExperienceYears
                                  })
+                                 .OrderBy(x => x.CourseId)
                                  .ToListAsync();
 
             return Ok(courses);
@@ -54,8 +58,6 @@ public class CourseAPIController : ControllerBase
             });
         }
     }
-
-
     #endregion
 
     #region GetCourseById
@@ -94,8 +96,7 @@ public class CourseAPIController : ControllerBase
     }
     #endregion
 
-    #region InsetCourse
-
+    #region InsertCourse
     [HttpPost]
     public async Task<IActionResult> InsertCourse([FromForm] CourseDto dto)
     {
@@ -106,27 +107,27 @@ public class CourseAPIController : ControllerBase
             // Handle image upload
             if (dto.Image != null && dto.Image.Length > 0)
             {
-                savedPath = ImageHelper.SaveImageToFile(dto.Image); // e.g., "uploads/course123.jpg"
+                savedPath = ImageHelper.SaveImageToFile(dto.Image); // returns "uploads/course123.jpg"
                 if (string.IsNullOrEmpty(savedPath))
                     return BadRequest("Failed to upload image.");
             }
 
-            // Save course to DB
+            // Save only relative path in DB
             var course = new Course
             {
                 Title = dto.Title,
                 Description = dto.Description,
                 TeacherId = dto.TeacherId,
                 CreatedAt = dto.CreatedAt ?? DateTime.Now,
-                ImageUrl = savedPath // store only relative path
+                ImageUrl = savedPath // e.g. "uploads/course123.jpg"
             };
 
             _context.Courses.Add(course);
             await _context.SaveChangesAsync();
 
-            // Return a full URL for frontend usage
-            var baseUrl = $"{Request.Scheme}://{Request.Host}/";
-            var imageFullUrl = string.IsNullOrEmpty(course.ImageUrl) ? null : baseUrl + course.ImageUrl;
+            // Build absolute URL for API response
+            var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}".TrimEnd('/');
+            var imageFullUrl = string.IsNullOrEmpty(course.ImageUrl) ? null : $"{baseUrl}/{course.ImageUrl}";
 
             return Ok(new
             {
@@ -135,7 +136,7 @@ public class CourseAPIController : ControllerBase
                 course.Description,
                 course.TeacherId,
                 course.CreatedAt,
-                ImageUrl = imageFullUrl
+                ImageUrl = imageFullUrl // Full URL for frontend
             });
         }
         catch (Exception ex)
@@ -143,7 +144,6 @@ public class CourseAPIController : ControllerBase
             return BadRequest(new { message = "Error occurred while inserting course.", error = ex.Message });
         }
     }
-
     #endregion
 
     #region UpdateCourse
@@ -157,20 +157,19 @@ public class CourseAPIController : ControllerBase
             if (existingCourse == null)
                 return NotFound(new { message = $"Course with ID {id} not found." });
 
-            // Update properties manually without using mapper
+            // Update basic properties
             existingCourse.Title = dto.Title;
             existingCourse.Description = dto.Description;
             existingCourse.TeacherId = dto.TeacherId;
 
-            // Only update CreatedAt if it's provided, otherwise keep the original
+            // Only update CreatedAt if explicitly provided
             if (dto.CreatedAt.HasValue)
-            {
                 existingCourse.CreatedAt = dto.CreatedAt;
-            }
 
+            // Handle image update
             if (dto.Image != null && dto.Image.Length > 0)
             {
-                // Delete old image if path exists
+                // Delete old image if it exists
                 if (!string.IsNullOrEmpty(existingCourse.ImageUrl))
                 {
                     try
@@ -179,12 +178,12 @@ public class CourseAPIController : ControllerBase
                     }
                     catch (Exception ex)
                     {
-                        // Log the error but continue with the update
-                        // You might want to add proper logging here
+                        // You could log this instead of silently ignoring
+                        Console.WriteLine($"Image delete error: {ex.Message}");
                     }
                 }
 
-                // Save new image
+                // Save new image (relative path)
                 var savedPath = ImageHelper.SaveImageToFile(dto.Image);
                 if (string.IsNullOrEmpty(savedPath))
                     return BadRequest("Failed to upload image.");
@@ -194,9 +193,9 @@ public class CourseAPIController : ControllerBase
 
             await _context.SaveChangesAsync();
 
-            // Return a full URL for frontend usage (consistent with insert response)
-            var baseUrl = $"{Request.Scheme}://{Request.Host}/";
-            var imageFullUrl = string.IsNullOrEmpty(existingCourse.ImageUrl) ? null : baseUrl + existingCourse.ImageUrl;
+            // Build absolute URL for frontend response
+            var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}".TrimEnd('/');
+            var imageFullUrl = string.IsNullOrEmpty(existingCourse.ImageUrl) ? null : $"{baseUrl}/{existingCourse.ImageUrl}";
 
             return Ok(new
             {
@@ -357,6 +356,81 @@ public class CourseAPIController : ControllerBase
         }
     }
     #endregion
+
+
+    #region Search Courses
+    [HttpGet("SearchCourse")]
+    [Authorize(Roles = "Admin,Teacher,Student")]
+    public IActionResult SearchCourses([FromQuery] string? query)
+    {
+        var courses = _context.Courses
+            .Include(c => c.Teacher) // navigation property is valid now
+            .Where(c =>
+                c.Teacher != null && c.Teacher.Role == "Teacher" &&
+                (string.IsNullOrEmpty(query) ||
+                 c.Title.Contains(query) ||
+                 c.Description.Contains(query) ||
+                 c.Teacher.FullName.Contains(query)))
+            .Select(c => new
+            {
+                c.CourseId,
+                c.Title,
+                c.Description,
+                TeacherName = c.Teacher.FullName,
+                c.CreatedAt,
+                c.ImageUrl
+            })
+            .ToList();
+
+        return Ok(courses);
+    }
+    #endregion
+
+    [HttpGet("GetById/{id}")]
+    public async Task<ActionResult<CourseDetailsDto>> GetById(int id)
+    {
+        var course = await _context.Courses
+            .Include(c => c.Teacher)
+            .FirstOrDefaultAsync(c => c.CourseId == id);
+
+        if (course == null)
+            return NotFound();
+
+        // ✅ Map feedbacks to DTO
+        var feedbacks = await _context.Feedbacks
+            .Where(f => f.CourseId == id)
+            .Select(f => new FeedbackDto
+            {
+                FeedbackId = f.FeedbackId,
+                Comments = f.Comment,         // Assuming property name is Comment in entity
+                Rating = f.Rating,
+                CourseId = f.CourseId,
+                CourseName = course.Title,
+                StudentId = f.StudentId,
+                StudentName = f.Student != null ? f.Student.Name : "Unknown",
+                CreatedAt = f.CreatedAt,
+                ImageUrl = f.Student != null ? f.Student.ImageUrl : null
+            })
+            .ToListAsync();
+
+        var dto = new CourseDetailsDto
+        {
+            Course = new CourseDto
+            {
+                CourseId = course.CourseId,
+                Title = course.Title,
+                Description = course.Description,
+                ImageUrl = course.ImageUrl,
+                TeacherId = course.TeacherId,
+                TeacherName = course.Teacher?.Name ?? "Unknown", // ✅ Teacher Name
+                CreatedAt = course.CreatedAt
+            },
+            Feedbacks = feedbacks
+        };
+
+        return Ok(dto);
+    }
+
 
 
 }

@@ -1,0 +1,189 @@
+@model List<LMSProjectFontend.Areas.User.Controllers.FeedbackController.FeedbackDisplayDto>
+@{
+    ViewData["Title"] = "Course Feedback";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <style>
+        .feedback-card {
+            transition: box-shadow .2s ease, transform .2s ease;
+            border-radius: 10px;
+        }
+        .feedback-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(0,0,0,.08) !important;
+        }
+        .course-thumb {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,.08);
+            border: 1px solid #e9ecef;
+        }
+        .rating i { margin-left: 1px; }
+        .truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    </style>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-4">
+            <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Course Feedback</li>
+        </ol>
+    </nav>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bx bx-check-circle me-2"></i>
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bx bx-error-circle me-2"></i>
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">Course Feedback & Reviews</h4>
+            <p class="text-muted">Discover what students say about their learning experience</p>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="input-group" style="width: 300px;">
+                <input type="text" class="form-control" placeholder="Search feedback..." id="searchInput">
+                <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                    <i class="bx bx-search"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bx bx-message-dots display-1 text-muted mb-3"></i>
+                <h5 class="text-muted">No feedback available</h5>
+                <p class="text-muted">Be the first to share your course experience!</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var feedback in Model)
+            {
+                <div class="col-12 col-lg-6">
+                    <div class="card h-100 shadow-sm feedback-card">
+                        <!-- Course Header -->
+                        <div class="card-header bg-light">
+                            <div class="d-flex align-items-center">
+                                <img
+                                    src="@feedback.Course.ImageUrl"
+                                    alt="@feedback.Course.Title"
+                                    class="course-thumb me-3"
+                                    loading="lazy"
+                                    onerror="this.onerror=null;this.src='@Url.Content("~/assets/img/illustrations/boy-with-laptop-light.png")';" />
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 fw-bold">@feedback.Course.Title</h6>
+                                    <small class="text-muted">by @feedback.Teacher.FullName</small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="d-flex align-items-center mb-1 rating">
+                                        @for (var i = 1; i <= 5; i++)
+                                        {
+                                            if (feedback.Rating.HasValue && i <= feedback.Rating.Value)
+                                            {
+                                                <i class="bx bxs-star text-warning fs-6"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bx bx-star text-muted fs-6"></i>
+                                            }
+                                        }
+                                        <span class="ms-2 fw-semibold">@feedback.Rating/5</span>
+                                    </div>
+                                    <small class="text-muted">@feedback.FeedbackCreatedAt?.ToString("MMM dd, yyyy")</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feedback Content -->
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <p class="mb-0 truncate-2">@feedback.Comment</p>
+                            </div>
+                            
+                            <!-- Student Info -->
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar avatar-sm me-2">
+                                        <span class="avatar-initial rounded-circle bg-label-primary">
+                                            @feedback.Student.FullName?.Substring(0, 1).ToUpper()
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <small class="fw-semibold">@feedback.Student.FullName</small>
+                                        <br>
+                                        <small class="text-muted">Student</small>
+                                    </div>
+                                </div>
+                                
+                                <!-- Teacher Qualification -->
+                                <div class="text-end">
+                                    <small class="text-muted">
+                                        <i class="bx bx-graduation me-1"></i>
+                                        @feedback.Teacher.Qualification
+                                    </small>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="bx bx-time me-1"></i>
+                                        @feedback.Teacher.ExperienceYears years exp.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Course Description Footer -->
+                        @if (!string.IsNullOrEmpty(feedback.Course.Description))
+                        {
+                            <div class="card-footer bg-light">
+                                <small class="text-muted">
+                                    <i class="bx bx-info-circle me-1"></i>
+                                    @(feedback.Course.Description.Length > 100 ? feedback.Course.Description.Substring(0, 100) + "..." : feedback.Course.Description)
+                                </small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const cards = document.querySelectorAll('.col-12.col-lg-6');
+    
+    function filterCards() {
+        const searchTerm = searchInput.value.toLowerCase();
+        cards.forEach(card => {
+            const text = card.textContent.toLowerCase();
+            const isVisible = text.includes(searchTerm);
+            card.style.display = isVisible ? 'block' : 'none';
+        });
+    }
+    
+    searchInput.addEventListener('input', filterCards);
+    searchBtn.addEventListener('click', filterCards);
+});
+</script>
+
+

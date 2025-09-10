@@ -1,7 +1,253 @@
-﻿using System.Text;
+﻿//using System.Text;
+//using LMSProjectFontend.Models;
+//using Microsoft.AspNetCore.Mvc;
+//using Microsoft.AspNetCore.Mvc.ModelBinding;
+//using Microsoft.AspNetCore.Mvc.Rendering;
+//using Microsoft.Extensions.Logging;
+//using Newtonsoft.Json;
+//using Microsoft.AspNetCore.Http;
+
+//namespace LMSProjectFontend.Controllers
+//{
+//    public class CourseController : Controller
+//    {
+//        #region Configuration Fields
+
+//        private readonly HttpClient _client;
+//        private readonly ILogger<CourseController> _logger;
+//        public CourseController(IHttpClientFactory httpClientFactory, ILogger<CourseController> logger)
+//        {
+//            _client = httpClientFactory.CreateClient();
+//            _client.BaseAddress = new Uri("http://localhost:5281/api/");
+//            _logger = logger;
+//        }
+
+//        #endregion
+
+//        #region GetAll Course
+//        public async Task<IActionResult> Index()
+//        {
+//            try
+//            {
+//                var response = await _client.GetAsync("CourseAPI");
+//                if (response.IsSuccessStatusCode)
+//                {
+//                    var json = await response.Content.ReadAsStringAsync();
+//                    var courses = JsonConvert.DeserializeObject<List<CourseModel>>(json) ?? new List<CourseModel>();
+
+//                    // Get teachers for mapping TeacherName
+//                    var teacherResponse = await _client.GetAsync("CourseAPI/dropdown");
+//                    if (teacherResponse.IsSuccessStatusCode)
+//                    {
+//                        var teacherJson = await teacherResponse.Content.ReadAsStringAsync();
+//                        var teachers = JsonConvert.DeserializeObject<List<TeacherDropdownDto>>(teacherJson);
+
+//                        // Map TeacherName into courses
+//                        foreach (var course in courses)
+//                        {
+//                            var teacher = teachers?.FirstOrDefault(t => t.Id == course.TeacherId);
+//                            course.TeacherName = teacher?.Name ?? "Unknown Teacher";
+//                        }
+//                    }
+
+//                    return View(courses);
+//                }
+//                else
+//                {
+//                    _logger.LogError("Failed to fetch courses. Status: {StatusCode}", response.StatusCode);
+//                    return View(new List<CourseModel>());
+//                }
+//            }
+//            catch (Exception ex)
+//            {
+//                _logger.LogError(ex, "Error occurred while fetching courses");
+//                return View(new List<CourseModel>());
+//            }
+//        }
+//        #endregion
+
+//        #region AddAndEdit
+//        public async Task<IActionResult> AddEdit(int id = 0)
+//        {
+//            try
+//            {
+//                // Always populate teachers dropdown
+//                var teacherResponse = await _client.GetAsync("CourseAPI/dropdown");
+//                if (teacherResponse.IsSuccessStatusCode)
+//                {
+//                    var teacherJson = await teacherResponse.Content.ReadAsStringAsync();
+//                    var teachers = JsonConvert.DeserializeObject<List<TeacherDropdownDto>>(teacherJson) ?? new List<TeacherDropdownDto>();
+//                    ViewBag.Teachers = new SelectList(teachers, "Id", "Name");
+//                }
+
+//                if (id == 0)
+//                {
+//                    return View(new CourseModel());
+//                }
+
+//                var response = await _client.GetAsync($"CourseAPI/GetById/{id}");
+//                if (response.IsSuccessStatusCode)
+//                {
+//                    var json = await response.Content.ReadAsStringAsync();
+//                    var course = JsonConvert.DeserializeObject<CourseModel>(json);
+//                    if (course != null)
+//                    {
+//                        return View(course);
+//                    }
+//                }
+//            }
+//            catch (Exception ex)
+//            {
+//                _logger.LogError(ex, "Error occurred while fetching course for edit");
+//            }
+
+//            return RedirectToAction(nameof(Index));
+//        }
+
+
+
+//        [HttpPost]
+//        public async Task<IActionResult> AddEdit(CourseModel course, IFormFile? imageFile)
+//        {
+//            try
+//            {
+//                // Prefer multipart to let API handle image storage and return final path
+//                using var formData = new MultipartFormDataContent();
+
+//                formData.Add(new StringContent(course.CourseId.ToString()), "CourseId");
+//                formData.Add(new StringContent(course.Title ?? string.Empty), "Title");
+//                formData.Add(new StringContent(course.Description ?? string.Empty), "Description");
+//                formData.Add(new StringContent(course.TeacherId?.ToString() ?? string.Empty), "TeacherId");
+//                formData.Add(new StringContent(course.CreatedAt.ToString("o")), "CreatedAt");
+
+//                // Pass through existing ImageUrl so API can keep it if no new file uploaded
+//                formData.Add(new StringContent(course.ImageUrl ?? string.Empty), "ImageUrl");
+
+//                // Prefer bound CourseImage; fallback to imageFile name if provided
+//                var uploadFile = course.CourseImage ?? imageFile;
+//                if (uploadFile != null && uploadFile.Length > 0)
+//                {
+//                    var streamContent = new StreamContent(uploadFile.OpenReadStream());
+//                    streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(uploadFile.ContentType);
+//                    // Field name aligned with existing helper usage
+//                    formData.Add(streamContent, "CourseImage", uploadFile.FileName);
+//                }
+
+//                HttpResponseMessage response;
+//                if (course.CourseId == 0)
+//                {
+//                    response = await _client.PostAsync("CourseAPI/Create", formData);
+//                }
+//                else
+//                {
+//                    response = await _client.PutAsync($"CourseAPI/Update/{course.CourseId}", formData);
+//                }
+
+//                if (response.IsSuccessStatusCode)
+//                {
+//                    // Optionally read back the updated course (including API-resolved ImageUrl)
+//                    var respJson = await response.Content.ReadAsStringAsync();
+//                    var updated = JsonConvert.DeserializeObject<CourseModel>(respJson);
+//                    if (updated != null)
+//                    {
+//                        TempData["Success"] = "Course saved successfully.";
+//                    }
+//                    return RedirectToAction(nameof(Index));
+//                }
+//                else
+//                {
+//                    _logger.LogError("Failed to save course. Status: {StatusCode}", response.StatusCode);
+//                    ModelState.AddModelError("", "Failed to save course. Please try again.");
+//                }
+//            }
+//            catch (Exception ex)
+//            {
+//                _logger.LogError(ex, "Error occurred while saving course");
+//                ModelState.AddModelError("", "An error occurred. Please try again.");
+//            }
+
+//            // If we get here, something went wrong, so reload the teachers for the dropdown
+//            try
+//            {
+//                var teacherResponse = await _client.GetAsync("CourseAPI/dropdown");
+//                if (teacherResponse.IsSuccessStatusCode)
+//                {
+//                    var teacherJson = await teacherResponse.Content.ReadAsStringAsync();
+//                    var teachers = JsonConvert.DeserializeObject<List<TeacherDropdownDto>>(teacherJson) ?? new List<TeacherDropdownDto>();
+//                    ViewBag.Teachers = new SelectList(teachers, "Id", "Name");
+//                }
+//            }
+//            catch
+//            {
+//                // Ignore errors when reloading teachers
+//            }
+
+//            return View(course);
+//        }
+
+
+//        #endregion
+
+//        #region Delete
+//        [HttpPost]
+//        public async Task<IActionResult> Delete(int id)
+//        {
+//            try
+//            {
+//                var response = await _client.DeleteAsync($"CourseAPI/Delete/{id}");
+//                if (response.IsSuccessStatusCode)
+//                {
+//                    return Json(new { success = true });
+//                }
+//                else
+//                {
+//                    _logger.LogError("Failed to delete course. Status: {StatusCode}", response.StatusCode);
+//                    return Json(new { success = false, message = "Failed to delete course" });
+//                }
+//            }
+//            catch (Exception ex)
+//            {
+//                _logger.LogError(ex, "Error occurred while deleting course");
+//                return Json(new { success = false, message = "An error occurred while deleting the course" });
+//            }
+//        }
+//        #endregion
+
+//        #region Image Mutipart Data
+//        public MultipartFormDataContent ConvertToMultipartFormData(CourseModel course)
+//        {
+//            var formData = new MultipartFormDataContent();
+
+//            // Add basic properties
+//            formData.Add(new StringContent(course.CourseId.ToString()), "CourseId");
+//            formData.Add(new StringContent(course.Title ?? ""), "Title");
+//            formData.Add(new StringContent(course.Description ?? ""), "Description");
+//            formData.Add(new StringContent(course.TeacherId?.ToString() ?? ""), "TeacherId");
+//            formData.Add(new StringContent(course.CreatedAt.ToString("o")), "CreatedAt");
+//            formData.Add(new StringContent(course.ImageUrl ?? ""), "imageUrl");
+
+//            // Add uploaded image file if available
+//            if (course.ImagePath != null && course.CourseImage.Length > 0)
+//            {
+//                var streamContent = new StreamContent(course.CourseImage.OpenReadStream());
+//                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(course.CourseImage.ContentType);
+
+//                formData.Add(streamContent, "CourseImage", course.CourseImage.FileName);
+//            }
+
+//            return formData;
+//        }
+
+//        #endregion
+//    }
+//}
+
+
+using System.Net.Http.Headers;
+using System.Text;
 using LMSProjectFontend.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -10,310 +256,204 @@ namespace LMSProjectFontend.Controllers
 {
     public class CourseController : Controller
     {
-        #region Configuration Fields
+        #region Fields & Constructor
 
         private readonly HttpClient _client;
         private readonly ILogger<CourseController> _logger;
-        public CourseController(IHttpClientFactory httpClientFactory, ILogger<CourseController> logger)
+        protected readonly IHttpContextAccessor _httpContextAccessor;
+
+        public CourseController(IHttpClientFactory httpClientFactory, ILogger<CourseController> logger, IHttpContextAccessor httpContextAccessor)
         {
             _client = httpClientFactory.CreateClient();
             _client.BaseAddress = new Uri("http://localhost:5281/api/");
             _logger = logger;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         #endregion
 
-        #region GetAll Course
-        public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 5)
+        #region Auth Token
+        protected void AttachToken()
+        {
+            var token = _httpContextAccessor.HttpContext.Session.GetString("JWTToken");
+            if (!string.IsNullOrEmpty(token))
+            {
+                _client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", token);
+            }
+            else
+            {
+                _client.DefaultRequestHeaders.Authorization = null;
+            }
+        }
+
+        #endregion
+
+        #region Index
+        public async Task<IActionResult> Index()
         {
             try
             {
-                // 🔹 Get paged courses
-                var response = await _client.GetAsync($"CourseAPI/GetPaged?pageNumber={pageNumber}&pageSize={pageSize}");
-                response.EnsureSuccessStatusCode();
+                AttachToken();
+                var response = await _client.GetAsync("CourseAPI");
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("Failed to fetch courses. Status: {StatusCode}", response.StatusCode);
+                    return View(new List<CourseModel>());
+                }
+
                 var json = await response.Content.ReadAsStringAsync();
-                var pagedCourses = JsonConvert.DeserializeObject<PagedResponse<CourseModel>>(json) ?? new PagedResponse<CourseModel>();
+                var courses = JsonConvert.DeserializeObject<List<CourseModel>>(json) ?? new List<CourseModel>();
 
-                // 🔹 Get teachers (dropdown API)
-                var teacherResponse = await _client.GetAsync("CourseAPI/dropdown");
-                teacherResponse.EnsureSuccessStatusCode();
-                var teacherJson = await teacherResponse.Content.ReadAsStringAsync();
-                var teachers = JsonConvert.DeserializeObject<List<TeacherDropdownDto>>(teacherJson);
-
-                // 🔹 Map TeacherName into courses
-                foreach (var course in pagedCourses.Data)
+                // Map teacher names
+                var teachers = await GetTeachersDropdownAsync();
+                foreach (var course in courses)
                 {
                     var teacher = teachers.FirstOrDefault(t => t.Id == course.TeacherId);
                     course.TeacherName = teacher?.Name ?? "Unknown Teacher";
-
-                    // ✅ Display API images by default, or new edited images
-                    if (!string.IsNullOrEmpty(course.ImageUrl))
-                    {
-                        // If it's already a full URL, keep it
-                        if (course.ImageUrl.StartsWith("http"))
-                        {
-                            // Keep as is
-                        }
-                        // If it's a relative path, make it absolute
-                        else if (course.ImageUrl.StartsWith("/"))
-                        {
-                            course.ImageUrl = $"http://localhost:5281{course.ImageUrl}";
-                        }
-                        // If it's just a filename, construct the full path
-                        else
-                        {
-                            course.ImageUrl = $"http://localhost:5281/uploads/{course.ImageUrl}";
-                        }
-                    }
                 }
 
-                // ✅ Handle newly uploaded images
-                var newImagePath = TempData["NewImagePath"]?.ToString();
-                var updatedCourseId = TempData["UpdatedCourseId"]?.ToString();
-
-                if (!string.IsNullOrEmpty(newImagePath) && !string.IsNullOrEmpty(updatedCourseId))
-                {
-                    var courseId = int.Parse(updatedCourseId);
-                    var updatedCourse = pagedCourses.Data.FirstOrDefault(c => c.CourseId == courseId);
-                    if (updatedCourse != null)
-                    {
-                        updatedCourse.ImageUrl = newImagePath;
-                    }
-                }
-
-                return View(pagedCourses); // 🔹 Pass paged courses with images & teacher names
+                return View(courses);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while fetching courses.");
-                TempData["Error"] = "Unable to load courses.";
-                return View(new PagedResponse<CourseModel>());
+                _logger.LogError(ex, "Error occurred while fetching courses");
+                return View(new List<CourseModel>());
             }
         }
-
-
-
         #endregion
 
-        #region AddAndEdit
+        #region Add/Edit
         [HttpGet]
-        public async Task<IActionResult> AddEdit(int? id)
+        public async Task<IActionResult> AddEdit(int id = 0)
         {
-            // 🔹 Get teachers from API
-            var teachers = await GetTeachersDropdownAsync();
-            ViewBag.Teachers = new SelectList(teachers, "Id", "Name");
-
-            if (id == null || id == 0)
-            {
-                return View(new CourseModel()); // Add mode
-            }
-
             try
             {
-                var response = await _client.GetAsync($"CourseAPI/{id}");
-                response.EnsureSuccessStatusCode();
+                ViewBag.Teachers = new SelectList(await GetTeachersDropdownAsync(), "Id", "Name");
 
-                var json = await response.Content.ReadAsStringAsync();
-                var course = JsonConvert.DeserializeObject<CourseModel>(json);
+                if (id == 0)
+                    return View(new CourseModel());
 
-                // ✅ Display API images by default, or new edited images
-                if (!string.IsNullOrEmpty(course.ImageUrl))
+                AttachToken();
+                var response = await _client.GetAsync($"CourseAPI/GetById/{id}");
+                if (response.IsSuccessStatusCode)
                 {
-                    // If it's already a full URL, keep it
-                    if (course.ImageUrl.StartsWith("http"))
-                    {
-                        // Keep as is
-                    }
-                    // If it's a relative path, make it absolute API URL
-                    else
-                    {
-                        course.ImageUrl = $"http://localhost:5281/{course.ImageUrl}";
-                    }
+                    var json = await response.Content.ReadAsStringAsync();
+                    var course = JsonConvert.DeserializeObject<CourseModel>(json);
+                    if (course != null)
+                        return View(course);
                 }
-
-                // Pass teacher list again for Edit mode
-                ViewBag.Teachers = new SelectList(teachers, "Id", "Name", course.TeacherId);
-
-                return View(course);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error loading course with ID {id}");
-                TempData["Error"] = "Unable to load course for editing.";
-                return RedirectToAction("Index");
+                _logger.LogError(ex, "Error occurred while fetching course for edit");
             }
+
+            return RedirectToAction(nameof(Index));
         }
-
-
 
         [HttpPost]
-        public async Task<IActionResult> AddEdit(CourseModel course, IFormFile courseImage)
+        public async Task<IActionResult> AddEdit(CourseModel course)
         {
             try
             {
-                // ✅ Validate image file
-                if (courseImage != null && courseImage.Length > 0)
-                {
-                    // Check file size (max 10MB)
-                    if (courseImage.Length > 10 * 1024 * 1024)
-                    {
-                        TempData["Error"] = "Image file size must be less than 10MB.";
-                        return await AddEdit(course.CourseId);
-                    }
+                var formData = ConvertToMultipartFormData(course);
 
-                    // Check file type
-                    var allowedTypes = new[] { "image/jpeg", "image/jpg", "image/png", "image/gif" };
-                    if (!allowedTypes.Contains(courseImage.ContentType.ToLower()))
-                    {
-                        TempData["Error"] = "Only JPEG, PNG, and GIF images are allowed.";
-                        return await AddEdit(course.CourseId);
-                    }
+                HttpResponseMessage response;
+                if (course.CourseId == 0)
+                {
+                    // Create new course
+                    AttachToken();
+                    var request = new HttpRequestMessage(HttpMethod.Post, "CourseAPI");
+                    request.Content = formData;
+                    response = await _client.SendAsync(request);
+                }
+                else
+                {
+                    // Update existing course
+                    AttachToken();
+                    var request = new HttpRequestMessage(HttpMethod.Put, $"CourseAPI/{course.CourseId}");
+                    request.Content = formData;
+                    response = await _client.SendAsync(request);
                 }
 
-                using (var formData = new MultipartFormDataContent())
+                if (response.IsSuccessStatusCode)
                 {
-                    formData.Add(new StringContent(course.CourseId.ToString()), "CourseId");
-                    formData.Add(new StringContent(course.Title ?? ""), "Title");
-                    formData.Add(new StringContent(course.Description ?? ""), "Description");
-                    formData.Add(new StringContent(course.TeacherId.ToString()), "TeacherId");
-                    formData.Add(new StringContent(course.CreatedAt.ToString("o")), "CreatedAt");
-
-                    // ✅ Add image file to form data
-                    if (courseImage != null && courseImage.Length > 0)
+                    if (course.CourseId > 0)
                     {
-                        var streamContent = new StreamContent(courseImage.OpenReadStream());
-                        streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(courseImage.ContentType);
-                        formData.Add(streamContent, "courseImage", courseImage.FileName);
-                    }
-
-                    HttpResponseMessage response;
-                    if (course.CourseId == 0)
-                    {
-                        response = await _client.PostAsync("CourseAPI", formData);
+                        TempData["SuccessMessage"] = "Course updated successfully.";
+                        return RedirectToAction(nameof(Index));
                     }
                     else
                     {
-                        response = await _client.PutAsync($"CourseAPI/{course.CourseId}", formData);
-                    }
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        // ✅ Save image locally for immediate display
-                        if (courseImage != null && courseImage.Length > 0)
-                        {
-                            var savedFileName = await SaveImageLocally(courseImage, course.CourseId);
-                            if (!string.IsNullOrEmpty(savedFileName))
-                            {
-                                // Store the new image path in TempData for immediate display
-                                TempData["NewImagePath"] = $"/uploads/{savedFileName}";
-                                TempData["UpdatedCourseId"] = course.CourseId.ToString();
-                            }
-                        }
-
-                        TempData["Success"] = course.CourseId == 0 ? "Course created successfully!" : "Course updated successfully!";
-                        return RedirectToAction("Index");
-                    }
-                    else
-                    {
-                        var errorContent = await response.Content.ReadAsStringAsync();
-                        _logger.LogError($"API Error: {response.StatusCode} - {errorContent}");
-                        TempData["Error"] = $"Error occurred while saving course. Status: {response.StatusCode}";
-                        return await AddEdit(course.CourseId);
+                        TempData["SuccessMessage"] = "Course created successfully.";
+                        return RedirectToAction(nameof(AddEdit));
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in AddEdit POST method");
-                TempData["Error"] = "An unexpected error occurred while saving the course.";
-                return await AddEdit(course.CourseId);
-            }
-        }
-
-
-        #endregion
-
-        #region Delete
-        public async Task<IActionResult> Delete(int id)
-        {
-            try
-            {
-                var response = await _client.DeleteAsync($"CourseAPI/{id}");
-                response.EnsureSuccessStatusCode();
-
-                TempData["Success"] = "Course deleted successfully.";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error occurred while deleting user with ID {id}.");
-                TempData["Error"] = "Unable to delete Course.";
-            }
-            return RedirectToAction("Index", "Course");
-        }
-        #endregion
-
-        #region Image Helper Methods
-        private async Task<string> SaveImageLocally(IFormFile imageFile, int courseId)
-        {
-            try
-            {
-                if (imageFile == null || imageFile.Length == 0)
-                    return string.Empty;
-
-                // Create uploads directory if it doesn't exist
-                var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-                if (!Directory.Exists(uploadsPath))
+                else
                 {
-                    Directory.CreateDirectory(uploadsPath);
+                    TempData["ErrorMessage"] = "Error occurred while saving course.";
+                    return View("AddEdit", course);
                 }
-
-                // Generate unique filename
-                var fileExtension = Path.GetExtension(imageFile.FileName);
-                var fileName = $"course_{courseId}_{DateTime.Now:yyyyMMddHHmmss}{fileExtension}";
-                var filePath = Path.Combine(uploadsPath, fileName);
-
-                // Save file
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await imageFile.CopyToAsync(stream);
-                }
-
-                _logger.LogInformation($"Image saved locally: {fileName}");
-                return fileName;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error saving image locally");
-                return string.Empty;
+                _logger.LogError(ex, "Error occurred while saving course");
+                TempData["ErrorMessage"] = "An unexpected error occurred.";
+                return View("AddEdit", course);
             }
         }
+
         #endregion
 
-        #region Image Mutipart Data
-        public MultipartFormDataContent ConvertToMultipartFormData(CourseModel course)
+        #region Helper
+        private MultipartFormDataContent ConvertToMultipartFormData(CourseModel course)
         {
             var formData = new MultipartFormDataContent();
 
-            // Add basic properties
-            formData.Add(new StringContent(course.CourseId.ToString()), "CourseId");
+            formData.Add(new StringContent(course.CourseId.ToString() ?? ""), "CourseId");
             formData.Add(new StringContent(course.Title ?? ""), "Title");
             formData.Add(new StringContent(course.Description ?? ""), "Description");
             formData.Add(new StringContent(course.TeacherId?.ToString() ?? ""), "TeacherId");
             formData.Add(new StringContent(course.CreatedAt.ToString("o")), "CreatedAt");
-            formData.Add(new StringContent(course.ImageUrl ?? ""), "imageUrl");
+            formData.Add(new StringContent(course.ImageUrl ?? ""), "ImageUrl");
 
-            // Add uploaded image file if available
             if (course.CourseImage != null && course.CourseImage.Length > 0)
             {
                 var streamContent = new StreamContent(course.CourseImage.OpenReadStream());
-                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(course.CourseImage.ContentType);
+                streamContent.Headers.ContentType = new MediaTypeHeaderValue(course.CourseImage.ContentType);
 
                 formData.Add(streamContent, "CourseImage", course.CourseImage.FileName);
             }
 
             return formData;
         }
+        #endregion
 
+        #region Delete
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                AttachToken();
+                var response = await _client.DeleteAsync($"CourseAPI/{id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["Success"] = "Course deleted successfully.";
+                }
+                else
+                {
+                    TempData["Error"] = "Failed to delete course.";
+                }
+            }
+            catch (Exception)
+            {
+                TempData["Error"] = "An error occurred while deleting the course.";
+            }
+
+            return RedirectToAction("Index", "Course");
+        }
         #endregion
 
         #region Teacher Dropdown
@@ -321,7 +461,8 @@ namespace LMSProjectFontend.Controllers
         {
             try
             {
-                var response = await _client.GetAsync("CourseAPI/dropdown"); // 🔹 your API endpoint
+                AttachToken();
+                var response = await _client.GetAsync("CourseAPI/dropdown");
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
@@ -337,79 +478,36 @@ namespace LMSProjectFontend.Controllers
         }
         #endregion
 
-        public async Task<IActionResult> Indexed(int pageNumber = 1, int pageSize = 5)
-        {
-            var response = await _client.GetAsync($"CourseAPI/GetAll?pageNumber={pageNumber}&pageSize={pageSize}");
-            if (!response.IsSuccessStatusCode)
-            {
-                TempData["Error"] = "Unable to fetch courses";
-                return View(new PagedResponse<CourseModel>());
-            }
-
-            var jsonString = await response.Content.ReadAsStringAsync();
-            var coursesPaged = JsonConvert.DeserializeObject<PagedResponse<CourseModel>>(jsonString);
-
-            return View(coursesPaged); // ✅ send PagedResponse not List
-        }
-
         #region Search
         [HttpGet]
         public async Task<IActionResult> Search(string keyword = "", int pageNumber = 1, int pageSize = 10)
         {
             try
             {
-                // Try API search first
+                AttachToken();
                 var searchUrl = $"CourseAPI/Search?keyword={Uri.EscapeDataString(keyword)}&pageNumber={pageNumber}&pageSize={pageSize}";
-                
                 var response = await _client.GetAsync(searchUrl);
+
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
                     var searchResults = JsonConvert.DeserializeObject<PagedResponse<CourseModel>>(json) ?? new PagedResponse<CourseModel>();
 
-                    // Get teachers for mapping TeacherName
-                    var teacherResponse = await _client.GetAsync("CourseAPI/dropdown");
-                    if (teacherResponse.IsSuccessStatusCode)
+                    var teachers = await GetTeachersDropdownAsync();
+                    foreach (var course in searchResults.Data)
                     {
-                        var teacherJson = await teacherResponse.Content.ReadAsStringAsync();
-                        var teachers = JsonConvert.DeserializeObject<List<TeacherDropdownDto>>(teacherJson);
-
-                        // Map TeacherName into courses
-                        foreach (var course in searchResults.Data)
-                        {
-                            var teacher = teachers?.FirstOrDefault(t => t.Id == course.TeacherId);
-                            course.TeacherName = teacher?.Name ?? "Unknown Teacher";
-
-                            // Fix image URLs
-                            if (!string.IsNullOrEmpty(course.ImageUrl))
-                            {
-                                if (!course.ImageUrl.StartsWith("http"))
-                                {
-                                    if (course.ImageUrl.StartsWith("/"))
-                                    {
-                                        course.ImageUrl = $"http://localhost:5281{course.ImageUrl}";
-                                    }
-                                    else
-                                    {
-                                        course.ImageUrl = $"http://localhost:5281/uploads/{course.ImageUrl}";
-                                    }
-                                }
-                            }
-                        }
+                        var teacher = teachers.FirstOrDefault(t => t.Id == course.TeacherId);
+                        course.TeacherName = teacher?.Name ?? "Unknown Teacher";
                     }
 
                     return Json(searchResults);
                 }
-                else
-                {
-                    // Fallback: Get all courses and search locally
-                    return await LocalSearch(keyword, pageNumber, pageSize);
-                }
+
+                return await LocalSearch(keyword, pageNumber, pageSize);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while searching courses via API. Falling back to local search.");
-                // Fallback to local search
                 return await LocalSearch(keyword, pageNumber, pageSize);
             }
         }
@@ -418,58 +516,30 @@ namespace LMSProjectFontend.Controllers
         {
             try
             {
-                // Get all courses
+                AttachToken();
                 var response = await _client.GetAsync("CourseAPI/GetAll");
-                response.EnsureSuccessStatusCode();
-                
+                if (!response.IsSuccessStatusCode)
+                    return Json(new PagedResponse<CourseModel>());
+
                 var json = await response.Content.ReadAsStringAsync();
                 var allCourses = JsonConvert.DeserializeObject<List<CourseModel>>(json) ?? new List<CourseModel>();
 
-                // Get teachers for mapping
-                var teacherResponse = await _client.GetAsync("CourseAPI/dropdown");
-                if (teacherResponse.IsSuccessStatusCode)
+                var teachers = await GetTeachersDropdownAsync();
+                foreach (var course in allCourses)
                 {
-                    var teacherJson = await teacherResponse.Content.ReadAsStringAsync();
-                    var teachers = JsonConvert.DeserializeObject<List<TeacherDropdownDto>>(teacherJson);
-
-                    // Map TeacherName and fix image URLs
-                    foreach (var course in allCourses)
-                    {
-                        var teacher = teachers?.FirstOrDefault(t => t.Id == course.TeacherId);
-                        course.TeacherName = teacher?.Name ?? "Unknown Teacher";
-
-                        if (!string.IsNullOrEmpty(course.ImageUrl))
-                        {
-                            if (!course.ImageUrl.StartsWith("http"))
-                            {
-                                if (course.ImageUrl.StartsWith("/"))
-                                {
-                                    course.ImageUrl = $"http://localhost:5281{course.ImageUrl}";
-                                }
-                                else
-                                {
-                                    course.ImageUrl = $"http://localhost:5281/uploads/{course.ImageUrl}";
-                                }
-                            }
-                        }
-                    }
+                    var teacher = teachers.FirstOrDefault(t => t.Id == course.TeacherId);
+                    course.TeacherName = teacher?.Name ?? "Unknown Teacher";
                 }
 
-                // Filter courses based on keyword
-                var filteredCourses = allCourses;
-                if (!string.IsNullOrEmpty(keyword))
-                {
-                    var searchTerm = keyword.ToLower();
-                    filteredCourses = allCourses.Where(c => 
-                        (c.Title?.ToLower().Contains(searchTerm) ?? false) ||
-                        (c.Description?.ToLower().Contains(searchTerm) ?? false) ||
-                        (c.TeacherName?.ToLower().Contains(searchTerm) ?? false)
-                    ).ToList();
-                }
+                var filteredCourses = allCourses.Where(c =>
+                    string.IsNullOrEmpty(keyword) ||
+                    c.Title?.Contains(keyword, StringComparison.OrdinalIgnoreCase) == true ||
+                    c.Description?.Contains(keyword, StringComparison.OrdinalIgnoreCase) == true ||
+                    c.TeacherName?.Contains(keyword, StringComparison.OrdinalIgnoreCase) == true
+                ).ToList();
 
-                // Apply pagination
-                var totalRecords = filteredCourses.Count;
-                var totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+                var totalCount = filteredCourses.Count;
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
                 var pagedCourses = filteredCourses
                     .Skip((pageNumber - 1) * pageSize)
                     .Take(pageSize)
@@ -478,9 +548,9 @@ namespace LMSProjectFontend.Controllers
                 var result = new PagedResponse<CourseModel>
                 {
                     Data = pagedCourses,
+                    TotalCount = totalCount,
                     PageNumber = pageNumber,
                     PageSize = pageSize,
-                    TotalRecords = totalRecords,
                     TotalPages = totalPages
                 };
 
@@ -488,14 +558,17 @@ namespace LMSProjectFontend.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in local search fallback");
+                _logger.LogError(ex, "Error occurred during local search");
                 return Json(new PagedResponse<CourseModel>());
             }
         }
         #endregion
-
-
     }
 }
+
+
+
+
+
 
 

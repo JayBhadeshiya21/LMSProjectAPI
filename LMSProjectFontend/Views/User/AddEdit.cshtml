@@ -1,20 +1,22 @@
-﻿@model UserModel
+﻿@model ModuleModel
 
 @{
-    ViewData["Title"] = Model.UserId == 0 ? "Add User" : "Edit User";
+    ViewData["Title"] = Model.ModuleId == 0 ? "Add Module" : "Edit Module";
 }
 
 <div class="container-fluid">
     <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+        <div class="col-12 col-md-9 col-lg-8 col-xl-7">
             <div class="card shadow-lg border-0">
+                <!-- Header -->
                 <div class="card-header bg-primary text-white text-center py-3">
                     <h4 class="mb-0">
-                        <i class="bx bx-user-plus me-2"></i>
-                        @ViewData["Title"]
+                        <i class="bx bx-book-open me-2"></i>@ViewData["Title"]
                     </h4>
-                    <small class="opacity-75">Please fill in the user details below</small>
+                    <small class="opacity-75">Fill in the module details below</small>
                 </div>
+
+                <!-- Body -->
                 <div class="card-body p-4">
                     @if (TempData["Error"] != null)
                     {
@@ -25,92 +27,77 @@
                         </div>
                     }
 
-                    <form asp-controller="User" asp-action="AddEdit" method="post">
+                    <form asp-controller="Module" asp-action="AddEdit" method="post">
                         @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-                        <input type="hidden" asp-for="UserId" />
-                        <input type="hidden" asp-for="CreatedAt" />
+                        <input type="hidden" asp-for="ModuleId" />
 
-                        <!-- Full Name -->
-                        <div class="mb-3">
-                            <label asp-for="FullName" class="form-label fw-semibold">
-                                <i class="bx bx-user me-1"></i>Full Name
-                            </label>
-                            <div class="input-group input-group-merge">
-                                <span class="input-group-text bg-light">
-                                    <i class="bx bx-user text-muted"></i>
-                                </span>
-                                <input asp-for="FullName" class="form-control" placeholder="Enter full name" />
-                            </div>
-                            <span asp-validation-for="FullName" class="text-danger small"></span>
-                        </div>
+                        <table class="table table-borderless align-middle">
+                            <tbody>
+                                <!-- Course -->
+                                <tr>
+                                    <th style="width: 25%;">
+                                        <label asp-for="CourseId" class="form-label fw-semibold">
+                                            <i class="bx bx-book me-1"></i>Course
+                                        </label>
+                                    </th>
+                                    <td>
+                                        <select asp-for="CourseId" class="form-select">
+                                            <option value="">-- Select Course --</option>
+                                            @* Populate dynamically *@
+                                        </select>
+                                        <span asp-validation-for="CourseId" class="text-danger small"></span>
+                                    </td>
+                                </tr>
 
-                        <!-- Email -->
-                        <div class="mb-3">
-                            <label asp-for="Email" class="form-label fw-semibold">
-                                <i class="bx bx-envelope me-1"></i>Email Address
-                            </label>
-                            <div class="input-group input-group-merge">
-                                <span class="input-group-text bg-light">
-                                    <i class="bx bx-envelope text-muted"></i>
-                                </span>
-                                <input asp-for="Email" class="form-control" placeholder="Enter email address" />
-                            </div>
-                            <span asp-validation-for="Email" class="text-danger small"></span>
-                        </div>
+                                <!-- Title -->
+                                <tr>
+                                    <th>
+                                        <label asp-for="Title" class="form-label fw-semibold">
+                                            <i class="bx bx-heading me-1"></i>Title
+                                        </label>
+                                    </th>
+                                    <td>
+                                        <input asp-for="Title" class="form-control" placeholder="Enter module title" />
+                                        <span asp-validation-for="Title" class="text-danger small"></span>
+                                    </td>
+                                </tr>
 
-                        <!-- Password -->
-                        <div class="mb-3">
-                            <label asp-for="Password" class="form-label fw-semibold">
-                                <i class="bx bx-lock me-1"></i>Password
-                            </label>
-                            <div class="input-group input-group-merge">
-                                <span class="input-group-text bg-light">
-                                    <i class="bx bx-lock text-muted"></i>
-                                </span>
-                                <input asp-for="Password" type="password" class="form-control" placeholder="Enter password" autocomplete="off" />
-                            </div>
-                            <span asp-validation-for="Password" class="text-danger small"></span>
-                        </div>
+                                <!-- Content -->
+                                <tr>
+                                    <th>
+                                        <label asp-for="Content" class="form-label fw-semibold">
+                                            <i class="bx bx-detail me-1"></i>Content
+                                        </label>
+                                    </th>
+                                    <td>
+                                        <textarea asp-for="Content" rows="4" class="form-control" placeholder="Enter module content"></textarea>
+                                        <span asp-validation-for="Content" class="text-danger small"></span>
+                                    </td>
+                                </tr>
 
-                        <!-- Role (Dropdown: Admin, Student, Teacher) -->
-                        <div class="mb-3">
-                            <label asp-for="Role" class="form-label fw-semibold">
-                                <i class="bx bx-id-card me-1"></i>Role
-                            </label>
-                            <div class="input-group input-group-merge">
-                                <span class="input-group-text bg-light">
-                                    <i class="bx bx-id-card text-muted"></i>
-                                </span>
-                                <select asp-for="Role" class="form-select">
-                                    <option value="">-- Select Role --</option>
-                                    <option value="Admin" selected="@("Admin" == Model.Role)">Admin</option>
-                                    <option value="Student" selected="@("Student" == Model.Role)">Student</option>
-                                    <option value="Teacher" selected="@("Teacher" == Model.Role)">Teacher</option>
-                                </select>
-                            </div>
-                            <span asp-validation-for="Role" class="text-danger small"></span>
-                        </div>
-
-                        <!-- Status -->
-                        <div class="mb-4">
-                            <label asp-for="Status" class="form-label fw-semibold">
-                                <i class="bx bx-toggle-right me-1"></i>Status
-                            </label>
-                            <select asp-for="Status" class="form-select">
-                                <option value="true" selected="@Model.Status">Active</option>
-                                <option value="false" selected="@(!Model.Status)">Inactive</option>
-                            </select>
-                            <span asp-validation-for="Status" class="text-danger small"></span>
-                        </div>
+                                <!-- Video URL -->
+                                <tr>
+                                    <th>
+                                        <label asp-for="VideoUrl" class="form-label fw-semibold">
+                                            <i class="bx bx-link me-1"></i>Video URL
+                                        </label>
+                                    </th>
+                                    <td>
+                                        <input asp-for="VideoUrl" class="form-control" placeholder="https://example.com/video" />
+                                        <span asp-validation-for="VideoUrl" class="text-danger small"></span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
 
                         <!-- Buttons -->
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
                             <a asp-action="Index" class="btn btn-outline-secondary me-md-2">
                                 <i class="bx bx-arrow-back me-1"></i>Back
                             </a>
                             <button type="submit" class="btn btn-primary">
-                                <i class="bx @(Model.UserId == 0 ? "bx-plus" : "bx-check") me-1"></i>
-                                @(Model.UserId == 0 ? "Add User" : "Update User")
+                                <i class="bx @(Model.ModuleId == 0 ? "bx-plus" : "bx-check") me-1"></i>
+                                @(Model.ModuleId == 0 ? "Add Module" : "Update Module")
                             </button>
                         </div>
                     </form>

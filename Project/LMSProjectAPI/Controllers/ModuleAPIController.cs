@@ -4,9 +4,11 @@ using LMSProjectAPI;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class ModuleAPIController : ControllerBase
 {
     #region Configuration Fields
@@ -19,11 +21,24 @@ public class ModuleAPIController : ControllerBase
 
     #region GetAllModules
     [HttpGet("All")]
-    public async Task<ActionResult<IEnumerable<Module>>> GetAllModules()
+    public async Task<ActionResult<IEnumerable<ModuleDto>>> GetAllModules()
     {
         try
         {
-            var modules = await _context.Modules.ToListAsync();
+            var modules = await _context.Modules
+                .Include(m => m.Course)
+                .Select(m => new ModuleDto
+                {
+                    ModuleId = m.ModuleId,
+                    CourseId = m.CourseId,
+                    Title = m.Title,
+                    Content = m.Content,
+                    VideoUrl = m.VideoUrl,
+                    OrderIndex = m.OrderIndex,
+                    CourseTitle = m.Course != null ? m.Course.Title : null
+                })
+                .ToListAsync();
+
             return Ok(modules);
         }
         catch (Exception ex)

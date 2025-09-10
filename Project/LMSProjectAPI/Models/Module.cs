@@ -20,3 +20,16 @@ public partial class Module
     [JsonIgnore]
     public virtual Course? Course { get; set; }
 }
+
+public class ModuleDto
+{
+    public int ModuleId { get; set; }
+    public int? CourseId { get; set; }
+    public string? Title { get; set; }
+    public string? Content { get; set; }
+    public string? VideoUrl { get; set; }
+    public int? OrderIndex { get; set; }
+
+    // Only course title
+    public string? CourseTitle { get; set; }
+}

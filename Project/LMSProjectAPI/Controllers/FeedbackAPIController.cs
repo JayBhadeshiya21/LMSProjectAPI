@@ -3,9 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using LMSProjectAPI;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class FeedbackAPIController : ControllerBase
 {
     #region Configuration Fields
@@ -18,24 +20,52 @@ public class FeedbackAPIController : ControllerBase
      
     #region GetAllFeedback
     [HttpGet("All")]
-    public async Task<ActionResult<IEnumerable<FeedbackDto>>> GetAllFeedback()
+    public async Task<ActionResult<IEnumerable<object>>> GetAllFeedback()
     {
         try
         {
             var feedbacks = await (from f in _context.Feedbacks
                                    join c in _context.Courses on f.CourseId equals c.CourseId
                                    join u in _context.Users on f.StudentId equals u.UserId
-                                   select new FeedbackDto
+                                   join t in _context.Users on c.TeacherId equals t.UserId
+                                   join td in _context.TeacherDetails on t.UserId equals td.UserId
+                                   select new
                                    {
+                                       // Feedback Fields
                                        FeedbackId = f.FeedbackId,
-                                       Comments = f.Comment,
+                                       Comment = f.Comment,
                                        Rating = f.Rating,
+                                       FeedbackCreatedAt = f.CreatedAt,
+                                       StudentId = f.StudentId,
+                                       
+                                       // Student Fields
+                                       StudentName = u.FullName,
+                                       StudentEmail = u.Email,
+                                       StudentRole = u.Role,
+                                       StudentStatus = u.Status,
+                                       StudentCreatedAt = u.CreatedAt,
+                                       
+                                       // Course Fields
                                        CourseId = c.CourseId,
-                                       CourseName = c.Title,
-                                       StudentId = u.UserId,
-                                       StudentName = u.FullName, 
-                                       CreatedAt = f.CreatedAt
-                                   }).ToListAsync();
+                                       CourseTitle = c.Title,
+                                       CourseDescription = c.Description,
+                                       CourseImageUrl = c.ImageUrl,
+                                       CourseCreatedAt = c.CreatedAt,
+                                       TeacherId = c.TeacherId,
+                                       
+                                       // Teacher Fields
+                                       TeacherName = t.FullName,
+                                       TeacherEmail = t.Email,
+                                       TeacherRole = t.Role,
+                                       TeacherStatus = t.Status,
+                                       TeacherCreatedAt = t.CreatedAt,
+                                       
+                                       // Teacher Detail Fields
+                                       Qualification = td.Qualification,
+                                       ExperienceYears = td.ExperienceYears
+                                   })
+                                   .OrderByDescending(x => x.FeedbackCreatedAt)
+                                   .ToListAsync();
 
             return Ok(feedbacks);
         }
@@ -49,6 +79,150 @@ public class FeedbackAPIController : ControllerBase
         }
     }
 
+    #endregion
+
+    #region GetAllFeedbackWithFullDetails
+    [HttpGet("GetAll")]
+    public async Task<ActionResult<IEnumerable<object>>> GetAllFeedbackWithFullDetails()
+    {
+        try
+        {
+            var feedbacks = await (from f in _context.Feedbacks
+                                   join c in _context.Courses on f.CourseId equals c.CourseId
+                                   join u in _context.Users on f.StudentId equals u.UserId
+                                   join t in _context.Users on c.TeacherId equals t.UserId
+                                   join td in _context.TeacherDetails on t.UserId equals td.UserId
+                                   select new
+                                   {
+                                       // Feedback Information
+                                       FeedbackId = f.FeedbackId,
+                                       Comment = f.Comment,
+                                       Rating = f.Rating,
+                                       FeedbackCreatedAt = f.CreatedAt,
+                                       StudentId = f.StudentId,
+                                       
+                                       // Student Information
+                                       Student = new
+                                       {
+                                           UserId = u.UserId,
+                                           FullName = u.FullName,
+                                           Email = u.Email,
+                                           Role = u.Role,
+                                           Status = u.Status,
+                                           CreatedAt = u.CreatedAt
+                                       },
+                                       
+                                       // Course Information
+                                       Course = new
+                                       {
+                                           CourseId = c.CourseId,
+                                           Title = c.Title,
+                                           Description = c.Description,
+                                           ImageUrl = c.ImageUrl,
+                                           CreatedAt = c.CreatedAt,
+                                           TeacherId = c.TeacherId
+                                       },
+                                       
+                                       // Teacher Information
+                                       Teacher = new
+                                       {
+                                           UserId = t.UserId,
+                                           FullName = t.FullName,
+                                           Email = t.Email,
+                                           Role = t.Role,
+                                           Status = t.Status,
+                                           CreatedAt = t.CreatedAt,
+                                           Qualification = td.Qualification,
+                                           ExperienceYears = td.ExperienceYears
+                                       }
+                                   })
+                                   .OrderByDescending(x => x.FeedbackCreatedAt)
+                                   .ToListAsync();
+
+            // Build full image URLs for each feedback
+            var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}".TrimEnd('/');
+            
+            var result = feedbacks.Select(f => new
+            {
+                f.FeedbackId,
+                f.Comment,
+                f.Rating,
+                f.FeedbackCreatedAt,
+                f.StudentId,
+                f.Student,
+                Course = new
+                {
+                    f.Course.CourseId,
+                    f.Course.Title,
+                    f.Course.Description,
+                    f.Course.CreatedAt,
+                    f.Course.TeacherId,
+                    ImageUrl = string.IsNullOrEmpty(f.Course.ImageUrl) ? null : $"{baseUrl}/{f.Course.ImageUrl}"
+                },
+                f.Teacher
+            }).ToList();
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                message = "Error occurred while retrieving detailed feedbacks.",
+                error = ex.Message
+            });
+        }
+    }
+    #endregion
+
+    #region GetFeedbackByCourse
+    [HttpGet("by-course/{courseId}")]
+    public async Task<ActionResult<IEnumerable<object>>> GetFeedbackByCourse(int courseId)
+    {
+        try
+        {
+            var feedbacks = await (from f in _context.Feedbacks
+                                   where f.CourseId == courseId
+                                   join c in _context.Courses on f.CourseId equals c.CourseId
+                                   join u in _context.Users on f.StudentId equals u.UserId
+                                   join t in _context.Users on c.TeacherId equals t.UserId
+                                   join td in _context.TeacherDetails on t.UserId equals td.UserId
+                                   select new
+                                   {
+                                       FeedbackId = f.FeedbackId,
+                                       Comment = f.Comment,
+                                       Rating = f.Rating,
+                                       FeedbackCreatedAt = f.CreatedAt,
+                                       StudentId = f.StudentId,
+                                       Student = new
+                                       {
+                                           UserId = u.UserId,
+                                           FullName = u.FullName,
+                                           Email = u.Email
+                                       },
+                                       Course = new
+                                       {
+                                           CourseId = c.CourseId,
+                                           Title = c.Title
+                                       },
+                                       Teacher = new
+                                       {
+                                           UserId = t.UserId,
+                                           FullName = t.FullName,
+                                           Qualification = td.Qualification,
+                                           ExperienceYears = td.ExperienceYears
+                                       }
+                                   })
+                                   .OrderByDescending(x => x.FeedbackCreatedAt)
+                                   .ToListAsync();
+
+            return Ok(feedbacks);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error occurred while retrieving feedback for course.", error = ex.Message });
+        }
+    }
     #endregion
 
     #region GetFeedbackById
@@ -97,9 +271,11 @@ public class FeedbackAPIController : ControllerBase
     {
         try
         {
+            feedback.CreatedAt = DateTime.Now;
             _context.Feedbacks.Add(feedback);
             await _context.SaveChangesAsync();
-            return NoContent();
+
+            return Ok(new { message = "Feedback created successfully.", data = feedback });
         }
         catch (Exception ex)
         {
@@ -110,29 +286,27 @@ public class FeedbackAPIController : ControllerBase
 
     #region UpdateFeedback
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateFeedback(int id, [FromBody] Feedback feedback)
+    public async Task<IActionResult> UpdateFeedback(int id, [FromBody] Feedback dto)
     {
-        if (id != feedback.FeedbackId)
-            return BadRequest();
+        if (id != dto.FeedbackId)
+            return BadRequest(new { message = "Feedback ID mismatch." });
 
-        _context.Entry(feedback).State = EntityState.Modified;
+        var existing = await _context.Feedbacks.FindAsync(id);
+        if (existing == null)
+            return NotFound(new { message = $"Feedback with ID {id} not found." });
 
-        try
-        {
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!_context.Feedbacks.Any(f => f.FeedbackId == id))
-                return NotFound();
-            else
-                throw;
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = $"Error occurred while updating feedback with ID {id}.", error = ex.Message });
-        }
+        // ✅ Update only editable fields
+        existing.Comment = dto.Comment;
+        existing.Rating = dto.Rating;
+        existing.CourseId = dto.CourseId;
+        existing.StudentId = dto.StudentId;
+
+        // ⚠️ Keep original CreatedAt, optionally add UpdatedAt field if you want
+        // existing.UpdatedAt = DateTime.Now;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(existing); // ✅ Return updated feedback object
     }
     #endregion
 
@@ -166,12 +340,12 @@ public class FeedbackAPIController : ControllerBase
     {
         try
         {
-            var students = await _context.StudentDetails
-                .Where(sd => sd.User != null) // only if User exists
-                .Select(sd => new StudentDropdownDto
+            var students = await _context.Users
+                .Where(u => u.Role == "Student") // ✅ filter only students
+                .Select(u => new StudentDropdownDto
                 {
-                    Id = sd.UserId,
-                    Name = sd.User.FullName
+                    Id = u.UserId,
+                    Name = u.FullName
                 })
                 .OrderBy(s => s.Name)
                 .ToListAsync();
@@ -184,4 +358,5 @@ public class FeedbackAPIController : ControllerBase
         }
     }
     #endregion
+
 }

@@ -1,0 +1,39 @@
+@model LMSProjectFontend.Models.StudentDetailModel
+@{
+    ViewData["Title"] = "Student Registration";
+    Layout = "~/Areas/User/Views/Shared/_UserLayout.cshtml";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <h5 class="card-header">Complete Student Registration</h5>
+            <div class="card-body">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+                }
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger">@ViewBag.Error</div>
+                }
+                <form asp-action="RegisterDetails" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Enrollment Number</label>
+                        <input asp-for="EnrollmentNumber" class="form-control" />
+                        <span asp-validation-for="EnrollmentNumber" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Course / Stream</label>
+                        <input asp-for="CourseStream" class="form-control" />
+                        <span asp-validation-for="CourseStream" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+

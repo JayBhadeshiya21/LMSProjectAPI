@@ -78,6 +78,7 @@ public class CourseDto
     public int? TeacherId { get; set; }
     public DateTime? CreatedAt { get; set; }
 
+
     [NotMapped]
     public IFormFile? Image { get; set; }
 
@@ -89,6 +90,26 @@ public sealed class TeacherDropdownDto
     public int Id { get; set; }
     public string Name { get; set; } = "";
 }
+
+public class CourseDetailsDto
+{
+    public CourseDtoDetails Course { get; set; }
+    public List<FeedbackDto> Feedbacks { get; set; } = new();
+}
+
+public class CourseDtoDetails
+{
+    public int CourseId { get; set; }
+    public string? Title { get; set; }
+    public string? Description { get; set; }
+    public int? TeacherId { get; set; }
+    public string? TeacherName { get; set; }   // ✅ Added for API response
+    public string? ImageUrl { get; set; }
+    public DateTime? CreatedAt { get; set; }
+}
+
+
+
 
 
 

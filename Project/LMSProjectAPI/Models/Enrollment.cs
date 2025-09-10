@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace LMSProjectAPI;
@@ -10,11 +11,7 @@ public partial class Enrollment
 
     public int? StudentId { get; set; }
 
-    public string? StudentName { get; set; }
-
     public int? CourseId { get; set; }
-
-    public string? CourseName { get; set; }
 
     public DateTime? EnrolledOn { get; set; }
 
@@ -28,13 +25,15 @@ public partial class Enrollment
 
 public class EnrollmentDto
 {
-    public int EnrollmentId { get; set; }
+    public int? EnrollmentId { get; set; }
     public int CourseId { get; set; }
     public string? CourseName { get; set; }
     public int StudentId { get; set; }
     public string? StudentName { get; set; }
     public DateTime? EnrolledOn { get; set; }
 }
+
+
 
 public class StudentDropdownDto
 {

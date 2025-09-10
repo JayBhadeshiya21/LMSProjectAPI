@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -101,6 +101,14 @@
                         </a>
                     </li>
 
+                    <!-- Modules -->
+                    <li class="menu-item">
+                        <a class="menu-link" asp-controller="Module" asp-action="Index">
+                            <i class="menu-icon tf-icons bx bx-grid-alt"></i>
+                            <div>Modules</div>
+                        </a>
+                    </li>
+
                     <!-- User -->
                     <li class="menu-item">
                         <a class="menu-link" asp-controller="User" asp-action="Index">
@@ -148,64 +156,37 @@
                         <!-- /Search -->
 
                         <ul class="navbar-nav flex-row align-items-center ms-auto">
-                            <!-- User -->
-                            <li class="nav-item navbar-dropdown dropdown-user dropdown">
-                                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
-                                    <div class="d-flex">
-                                        <div class="flex-shrink-0 me-3">
-                                            <div class="avatar avatar-online">
-                                                <img src="../assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle">
-                                            </div>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <span class="fw-semibold d-block">Bhadeshiya Jay</span>
-                                            <small class="text-muted">Admin</small>
-                                        </div>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle d-flex align-items-center"
+                                   href="#"
+                                   id="userDropdown"
+                                   role="button"
+                                   data-bs-toggle="dropdown"
+                                   aria-expanded="false">
+
+                                    <img src="~/assets/img/avatars/1.png" class="rounded-circle me-2" width="40" height="40" />
+                                    <div class="d-none d-md-block">
+                                        <span class="fw-semibold d-block">@Context.Session.GetString("UserEmail")</span>
+                                        <small class="text-muted">@Context.Session.GetString("UserRole")</small>
                                     </div>
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-end">
+
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                                     <li>
-                                        <a class="dropdown-item" href="#">
-                                            <div class="d-flex">
-                                                <div class="flex-shrink-0 me-3">
-                                                    <div class="avatar avatar-online">
-                                                        <img src="../assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle">
-                                                    </div>
-                                                </div>
-                                                <div class="flex-grow-1">
-                                                    <span class="fw-semibold d-block">Bhadeshiya Jay</span>
-                                                    <small class="text-muted">Admin</small>
-                                                </div>
-                                            </div>
+                                        <a class="dropdown-item" href="/User/User/Profile">
+                                            <i class="bx bx-user me-2"></i> My Profile
                                         </a>
                                     </li>
+                                    <li><hr class="dropdown-divider"></li>
                                     <li>
-                                        <div class="dropdown-divider"></div>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="#">
-                                            <i class="bx bx-user me-2"></i>
-                                            <span class="align-middle">My Profile</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="#">
-                                            <i class="bx bx-cog me-2"></i>
-                                            <span class="align-middle">Settings</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <div class="dropdown-divider"></div>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="/Login/Logout">
-                                            <i class="bx bx-power-off me-2"></i>
-                                            <span class="align-middle">Log Out</span>
+                                        <a class="dropdown-item text-danger fw-bold" href="/Login/Logout">
+                                            <i class="bx bx-power-off me-2 text-danger"></i> Log Out
                                         </a>
                                     </li>
                                 </ul>
                             </li>
-                            <!--/ User -->
+
+
                         </ul>
                     </div>
                 </nav>
@@ -249,9 +230,12 @@
     <!-- build:js assets/vendor/js/core.js -->
     <script src="~/../assets/vendor/libs/jquery/jquery.js"></script>
     <script src="~/../assets/vendor/libs/popper/popper.js"></script>
-    <script src="~/../assets/vendor/js/bootstrap.js"></script>
     <script src="~/../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
     <script src="~/../assets/vendor/js/menu.js"></script>
+    <script src="~/../assets/vendor/js/bootstrap.js"></script>
+    <script src="~/../assets/vendor/js/bootstrap.bundle.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
     <!-- endbuild -->
     <!-- Vendors JS -->
     <script src="~/../assets/vendor/libs/apex-charts/apexcharts.js"></script>

@@ -1,98 +1,84 @@
 ﻿@model CourseModel
 
-@{
-    ViewData["Title"] = Model.CourseId == 0 ? "Add Course" : "Edit Course";
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white text-center">
-                    <h4>@ViewData["Title"]</h4>
-                </div>
-                <div class="card-body">
-                    @if (TempData["Error"] != null)
-                    {
-                        <div class="alert alert-danger">@TempData["Error"]</div>
-                    }
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
 
-                    <form asp-action="AddEdit" method="post" enctype="multipart/form-data">
-                        @if (Model.CourseId != 0)
-                        {
-                            <input type="hidden" asp-for="CourseId" />
-                        }
+<form asp-action="AddEdit" asp-controller="Course" enctype="multipart/form-data">
+    <input type="hidden" asp-for="CourseId" />
+    <input type="hidden" asp-for="ImageUrl" />
 
-                        <div class="mb-3">
-                            <label asp-for="Title" class="form-label"></label>
-                            <input asp-for="Title" class="form-control" placeholder="Enter course title" />
-                            <span asp-validation-for="Title" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="Description" class="form-label"></label>
-                            <textarea asp-for="Description" class="form-control" rows="4" placeholder="Enter course description"></textarea>
-                            <span asp-validation-for="Description" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="TeacherId" class="form-label"></label>
-                            @Html.DropDownListFor(
-                                model => model.TeacherId,
-                                (SelectList)ViewBag.Teachers,
-                                "Select Teacher",
-                                new { @class = "form-control" }
-                            )
-                            <span asp-validation-for="TeacherId" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Course Image</label>
-                            <input asp-for="CourseImage" type="file" class="form-control" accept="image/*" />
-                            <small class="form-text text-muted">Supported formats: JPEG, PNG, GIF. Maximum size: 10MB</small>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Current Image</label>
-                            <div class="position-relative d-inline-block">
-                                <img src="@Model.ImageUrl" alt="@Model.Title" class="img-thumbnail course-image" style="max-height: 150px; max-width: 200px; object-fit: cover; border-radius: 8px;"
-                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="image-error position-absolute top-0 start-0" style="display: none; height: 150px; width: 200px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px;">
-                                    <div class="d-flex align-items-center justify-content-center h-100">
-                                        <i class="bx bx-image fs-4 text-muted"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <small class="form-text text-muted">Upload a new image to replace the current one</small>
-                        </div>
-
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-success">Save</button>
-                            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+    <div class="form-group">
+        <label asp-for="Title">Course Title</label>
+        <input type="text" class="form-control" asp-for="Title" placeholder="Enter course title" />
+        <span asp-validation-for="Title" class="text-danger"></span>
     </div>
-</div>
+
+    <div class="form-group">
+        <label asp-for="Description">Description</label>
+        <textarea class="form-control" asp-for="Description" placeholder="Enter description"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="TeacherId">Teacher</label>
+        <select class="form-control" asp-for="TeacherId" asp-items="ViewBag.Teachers">
+            <option value="">Select Teacher</option>
+        </select>
+        <span asp-validation-for="TeacherId" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label>Course Image</label>
+        <input type="file" class="form-control-file" asp-for="CourseImage" accept="image/*" onchange="previewImage(event)" />
+    </div>
+
+    <div class="form-group mt-2">
+        @{
+            var rawPath = !string.IsNullOrWhiteSpace(Model?.ImageUrl)
+            ? Model.ImageUrl
+            : null;
+            var hasExisting = !string.IsNullOrWhiteSpace(rawPath);
+            var isAbsolute = hasExisting && rawPath!.StartsWith("http", StringComparison.OrdinalIgnoreCase);
+            var normalized = hasExisting ? (isAbsolute ? rawPath : rawPath!.TrimStart('~').TrimStart('/')) : null;
+            if (hasExisting && !isAbsolute && normalized != null && !normalized.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase))
+            {
+                normalized = $"uploads/{normalized}";
+            }
+            var existingSrc = hasExisting ? (isAbsolute ? normalized : $"http://localhost:5281/{normalized}") : null;
+        }
+        <img id="previewImg"
+             src="@(existingSrc ?? "")"
+             alt="@Model?.Title"
+             class="img-thumbnail"
+             style="max-height: 120px; max-width: 200px; @(hasExisting ? "" : "display:none;")" />
+    </div>
+
+    <br />
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-action="Index" asp-controller="Course" class="btn btn-danger">Cancel</a>
+</form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // Image error handling
-            const images = document.querySelectorAll('.course-image');
-            images.forEach(img => {
-                img.addEventListener('error', function() {
-                    this.style.display = 'none';
-                    const errorDiv = this.nextElementSibling;
-                    if (errorDiv && errorDiv.classList.contains('image-error')) {
-                        errorDiv.style.display = 'flex';
-                    }
-                });
-            });
-        });
+        function previewImage(evt) {
+            const input = evt.target;
+            const img = document.getElementById('previewImg');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    img.src = e.target.result;
+                    img.style.display = 'inline-block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
     </script>
 }

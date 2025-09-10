@@ -36,15 +36,33 @@
                         </a>
                     </li>
                     <li class="menu-item">
-                        <a href="/User/User/Courses" class="menu-link">
+                        <a asp-area="User" asp-controller="Course" asp-action="Index" class="menu-link">
                             <i class="menu-icon tf-icons bx bx-book"></i>
-                            <div data-i18n="Analytics">My Courses</div>
+                            <div data-i18n="Analytics">Courses</div>
                         </a>
                     </li>
+                    @* <li class="menu-item">
+                        <a asp-area="User" asp-controller="Feedback" asp-action="Index" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-message-dots"></i>
+                            <div data-i18n="Analytics">Course Feedback</div>
+                        </a>
+                    </li> *@
                     <li class="menu-item">
                         <a href="/User/User/Profile" class="menu-link">
                             <i class="menu-icon tf-icons bx bx-user"></i>
                             <div data-i18n="Analytics">Profile</div>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a asp-area="User" asp-controller="Home" asp-action="Contact" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-phone"></i>
+                            <div data-i18n="Analytics">Contact Us</div>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a asp-area="User" asp-controller="Home" asp-action="About" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-info-circle"></i>
+                            <div data-i18n="Analytics">About</div>
                         </a>
                     </li>
                 </ul>
@@ -64,37 +82,37 @@
 
                         <ul class="navbar-nav flex-row align-items-center ms-auto">
                             <li class="nav-item navbar-dropdown dropdown-user dropdown">
-                                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
-                                    <div class="d-flex">
-                                        <div class="flex-shrink-0 me-3">
-                                            <div class="avatar avatar-online">
-                                                <img src="~/assets/img/avatars/1.png" alt class="w-px-40 h-auto rounded-circle">
-                                            </div>
+                                <a class="nav-link dropdown-toggle d-flex align-items-center"
+                                   href="#"
+                                   role="button"
+                                   data-bs-toggle="dropdown"
+                                   aria-expanded="false">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar avatar-online me-2">
+                                            <img src="~/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle">
                                         </div>
-                                        <div class="flex-grow-1">
+                                        <div class="d-none d-md-block">
                                             <span class="fw-semibold d-block">@Context.Session.GetString("UserEmail")</span>
-                                            <small class="text-muted">Student</small>
+                                            <small class="text-muted">@Context.Session.GetString("UserRole")</small>
                                         </div>
                                     </div>
                                 </a>
+
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li>
                                         <a class="dropdown-item" href="/User/User/Profile">
-                                            <i class="bx bx-user me-2"></i>
-                                            <span class="align-middle">My Profile</span>
+                                            <i class="bx bx-user me-2"></i> My Profile
                                         </a>
                                     </li>
+                                    <li><hr class="dropdown-divider"></li>
                                     <li>
-                                        <div class="dropdown-divider"></div>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="/Login/Logout">
-                                            <i class="bx bx-power-off me-2"></i>
-                                            <span class="align-middle">Log Out</span>
+                                        <a class="dropdown-item text-danger fw-semibold" href="/Login/Logout">
+                                            <i class="bx bx-power-off me-2 text-danger"></i> Log Out
                                         </a>
                                     </li>
                                 </ul>
                             </li>
+
                         </ul>
                     </div>
                 </nav>
@@ -133,6 +151,8 @@
     <script src="~/assets/vendor/libs/apex-charts/apexcharts.js"></script>
     <script src="~/assets/js/main.js"></script>
     <script src="~/assets/js/dashboards-analytics.js"></script>
+    <script src="~/assets/vendor/js/bootstrap.bundle.js"></script>
+
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

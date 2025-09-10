@@ -1,0 +1,274 @@
+@model LMSProjectFontend.Areas.User.Controllers.FeedbackController.FeedbackSubmissionModel
+@{
+    ViewData["Title"] = "Add Course Feedback";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <style>
+        .course-preview {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .course-image {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 3px solid rgba(255,255,255,0.2);
+        }
+        .rating-stars {
+            font-size: 2rem;
+            color: #ddd;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .rating-stars.active {
+            color: #ffc107;
+        }
+        .rating-stars:hover {
+            color: #ffc107;
+        }
+        .feedback-form {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+    </style>
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-4">
+            <li class="breadcrumb-item"><a href="/User">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="/User/Course">Courses</a></li>
+            <li class="breadcrumb-item"><a href="/User/Course/Details/@Model.CourseId">@Model.CourseTitle</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Add Feedback</li>
+        </ol>
+    </nav>
+
+    <!-- Alert Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bx bx-check-circle me-2"></i>
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bx bx-error-circle me-2"></i>
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Course Preview Card -->
+    <div class="course-preview">
+        <div class="row align-items-center">
+            <div class="col-md-2">
+                @if (!string.IsNullOrEmpty(Model.CourseImageUrl))
+                {
+                    var imageSrc = Model.CourseImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                        ? Model.CourseImageUrl
+                        : $"http://localhost:5281/{Model.CourseImageUrl.TrimStart('/')}";
+                    <img src="@imageSrc" alt="@Model.CourseTitle" class="course-image" 
+                         onerror="this.onerror=null; this.src='/assets/img/illustrations/boy-with-laptop-light.png';" />
+                }
+                else
+                {
+                    <div class="course-image d-flex align-items-center justify-content-center bg-white bg-opacity-20">
+                        <i class="bx bx-book-open" style="font-size: 3rem; color: rgba(255,255,255,0.8);"></i>
+                    </div>
+                }
+            </div>
+            <div class="col-md-10">
+                <h3 class="mb-2">@Model.CourseTitle</h3>
+                <p class="mb-2 opacity-75">
+                    <i class="bx bx-user me-2"></i>Instructor: <strong>@Model.TeacherName</strong>
+                </p>
+                <p class="mb-0 opacity-75">
+                    @if (!string.IsNullOrEmpty(Model.CourseDescription))
+                    {
+                        @(Model.CourseDescription.Length > 150 ? Model.CourseDescription.Substring(0, 150) + "..." : Model.CourseDescription)
+                    }
+                    else
+                    {
+                        <span>Share your experience with this course!</span>
+                    }
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="feedback-form p-4">
+                <div class="text-center mb-4">
+                    <h4 class="fw-bold text-primary mb-2">Share Your Experience</h4>
+                    <p class="text-muted">Your feedback helps other students and improves the course quality</p>
+                </div>
+
+                <form asp-action="AddFeedback" method="post" id="feedbackForm">
+                    <input type="hidden" asp-for="CourseId" />
+                    <input type="hidden" asp-for="CourseTitle" />
+                    <input type="hidden" asp-for="CourseDescription" />
+                    <input type="hidden" asp-for="CourseImageUrl" />
+                    <input type="hidden" asp-for="TeacherName" />
+
+                    <!-- Rating Section -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Rate this course <span class="text-danger">*</span></label>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rating-container">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="bx bx-star rating-stars" data-rating="@i"></i>
+                                }
+                            </div>
+                            <span id="ratingText" class="text-muted">Click to rate</span>
+                        </div>
+                        <input type="hidden" asp-for="Rating" id="ratingInput" />
+                        <span asp-validation-for="Rating" class="text-danger"></span>
+                    </div>
+
+                    <!-- Comment Section -->
+                    <div class="mb-4">
+                        <label asp-for="Comment" class="form-label fw-semibold">Your Feedback <span class="text-danger">*</span></label>
+                        <textarea asp-for="Comment" class="form-control" rows="6" 
+                                  placeholder="Share your thoughts about the course content, instructor, learning experience, and what you liked or would improve..."
+                                  maxlength="1000"></textarea>
+                        <div class="form-text">
+                            <span id="charCount">0</span>/1000 characters
+                        </div>
+                        <span asp-validation-for="Comment" class="text-danger"></span>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-3 justify-content-end">
+                        <a href="@Url.Action("Details", "Course", new { id = Model.CourseId })" class="btn btn-outline-secondary">
+                            <i class="bx bx-arrow-back me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4" id="submitBtn">
+                            <i class="bx bx-send me-1"></i> Submit Feedback
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const stars = document.querySelectorAll('.rating-stars');
+            const ratingInput = document.getElementById('ratingInput');
+            const ratingText = document.getElementById('ratingText');
+            const commentTextarea = document.querySelector('textarea[name="Comment"]');
+            const charCount = document.getElementById('charCount');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            const ratingTexts = {
+                1: 'Poor - Needs significant improvement',
+                2: 'Fair - Below expectations',
+                3: 'Good - Meets expectations',
+                4: 'Very Good - Above expectations',
+                5: 'Excellent - Outstanding course!'
+            };
+
+            // Rating functionality
+            stars.forEach((star, index) => {
+                star.addEventListener('click', function() {
+                    const rating = parseInt(this.dataset.rating);
+                    ratingInput.value = rating;
+                    ratingText.textContent = ratingTexts[rating];
+                    
+                    // Update star display
+                    stars.forEach((s, i) => {
+                        if (i < rating) {
+                            s.classList.remove('bx-star');
+                            s.classList.add('bxs-star', 'active');
+                        } else {
+                            s.classList.remove('bxs-star', 'active');
+                            s.classList.add('bx-star');
+                        }
+                    });
+                });
+
+                star.addEventListener('mouseover', function() {
+                    const rating = parseInt(this.dataset.rating);
+                    stars.forEach((s, i) => {
+                        if (i < rating) {
+                            s.style.color = '#ffc107';
+                        } else {
+                            s.style.color = '#ddd';
+                        }
+                    });
+                });
+            });
+
+            // Reset star colors on mouse leave
+            document.querySelector('.rating-container').addEventListener('mouseleave', function() {
+                const currentRating = parseInt(ratingInput.value) || 0;
+                stars.forEach((s, i) => {
+                    if (i < currentRating) {
+                        s.style.color = '#ffc107';
+                    } else {
+                        s.style.color = '#ddd';
+                    }
+                });
+            });
+
+            // Character count for textarea
+            commentTextarea.addEventListener('input', function() {
+                const count = this.value.length;
+                charCount.textContent = count;
+                
+                if (count > 900) {
+                    charCount.style.color = '#dc3545';
+                } else if (count > 800) {
+                    charCount.style.color = '#fd7e14';
+                } else {
+                    charCount.style.color = '#6c757d';
+                }
+            });
+
+            // Form validation
+            document.getElementById('feedbackForm').addEventListener('submit', function(e) {
+                const rating = parseInt(ratingInput.value);
+                const comment = commentTextarea.value.trim();
+                
+                if (!rating || rating < 1 || rating > 5) {
+                    e.preventDefault();
+                    alert('Please provide a rating between 1 and 5 stars.');
+                    return false;
+                }
+                
+                if (!comment || comment.length < 10) {
+                    e.preventDefault();
+                    alert('Please provide a feedback comment with at least 10 characters.');
+                    commentTextarea.focus();
+                    return false;
+                }
+
+                // Show loading state
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Submitting...';
+                submitBtn.disabled = true;
+            });
+
+            // Auto-hide alerts
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+        });
+    </script>
+}

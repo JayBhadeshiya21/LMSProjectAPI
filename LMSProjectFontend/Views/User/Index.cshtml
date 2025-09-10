@@ -1,5 +1,4 @@
-﻿@model List<UserModel>
-@{
+﻿@{
     ViewData["Title"] = "User List";
 }
 
@@ -13,32 +12,27 @@
         </ol>
     </nav>
 
-    <!-- Page Title -->
+    <!-- Page Title + Add User -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="fw-bold">User List</h4>
-        <a asp-controller="User" asp-action="AddEdit"  class="btn btn-success">
+        <a asp-controller="User" asp-action="AddEdit" class="btn btn-success">
             <i class="bx bx-plus"></i> Add New User
         </a>
     </div>
 
-    <!-- Alert Messages -->
-
+    <!-- Success / Error Alerts -->
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+        <div class="alert alert-success">@TempData["Success"]</div>
     }
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            @TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+        <div class="alert alert-danger">@TempData["Error"]</div>
     }
 
-    <!-- User Table Card -->
+
+
+    <!-- User Table -->
     <div class="card">
         <div class="table-responsive text-nowrap">
             <table class="table">
@@ -53,110 +47,61 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody id="courseTableBody" class="table-border-bottom-0">
-                    @foreach (var user in Model)
-                    {
-                        <tr>
-                            <td><strong>@user.FullName</strong></td>
-                            <td>@user.Email</td>
-                            <td>@user.Password</td>
-                            <td>@user.Role</td>
-                            <td>@user.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
-                            <td>
-                                @if (user.Status)
-                                {
-                                    <span class="badge bg-label-success me-1">Active</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-label-secondary me-1">Inactive</span>
-                                }
-                            </td>
-                            <td>
-                                <a asp-controller="User" asp-action="AddEdit" asp-route-id="@user.UserId" class="btn btn-sm btn-outline-warning me-1">
-                                    <i class="bx bx-edit-alt"></i> Edit
-                                </a>
-                                <a asp-controller="User" asp-action="Delete" asp-route-id="@user.UserId" class="btn btn-sm btn-outline-danger">
-                                    <i class="bx bx-trash"></i> Delete
-                                </a>
-                            </td>
-
-                        </tr>
-                    }
+                <tbody id="userTableBody" class="table-border-bottom-0">
+                    <!-- Rows will load via AJAX -->
                 </tbody>
             </table>
         </div>
-
-        <!-- 🔹 Pagination -->
-        <nav aria-label="User pagination">
-            <ul class="pagination justify-content-center mt-3" id="pagination"></ul>
-        </nav>
     </div>
 
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const rowsPerPage = 5;
-        const tableBody = document.getElementById("courseTableBody");
-        const rows = tableBody.querySelectorAll("tr");
-        const totalRows = rows.length;
-        const totalPages = Math.ceil(totalRows / rowsPerPage);
-        const pagination = document.getElementById("pagination");
+    $(document).ready(function () {
+        $("#globalSearch").keyup(function () {
+            let keyword = $(this).val();
 
-        function showPage(page) {
-            let start = (page - 1) * rowsPerPage;
-            let end = start + rowsPerPage;
-
-            rows.forEach((row, index) => {
-                row.style.display = (index >= start && index < end) ? "" : "none";
+            $.ajax({
+                url: "http://localhost:5281/api/UserAPI/Search",
+                type: "GET",
+                data: { keyword: keyword },
+                success: function (data) {
+                    let rows = '';
+                    $.each(data, function (i, user) {
+                        rows += `<tr>
+                                    <td><strong>${user.fullName || ''}</strong></td>
+                                    <td>${user.email || ''}</td>
+                                    <td>${user.password || ''}</td>
+                                    <td>${user.role || ''}</td>
+                                    <td>${user.createdAt ? new Date(user.createdAt).toLocaleString() : ''}</td>
+                                    <td>
+                                        ${user.status
+                                            ? '<span class="badge bg-label-success me-1">Active</span>'
+                                            : '<span class="badge bg-label-secondary me-1">Inactive</span>'}
+                                    </td>
+                                    <td>
+                                        <a href="/User/AddEdit/${user.userId}"
+                                           class="btn btn-sm btn-outline-warning me-1">
+                                           <i class="bx bx-edit-alt"></i> Edit
+                                        </a>
+                                           <a href="/User/Delete/${user.userId}"
+                                           class="btn btn-sm btn-outline-danger"
+                                           onclick="return confirm('Are you sure you want to delete this user?');">
+                                           <i class="bx bx-trash"></i> Delete
+                                        </a>
+                                    </td>
+                                </tr>`;
+                    });
+                    $("#userTableBody").html(rows);
+                },
+                error: function () {
+                    alert("Error fetching users from API");
+                }
             });
+        });
 
-            pagination.querySelectorAll("li").forEach(li => li.classList.remove("active"));
-            pagination.querySelector(`[data-page='${page}']`)?.classList.add("active");
-        }
-
-        function createPagination() {
-            pagination.innerHTML = "";
-
-            pagination.innerHTML += `
-                <li class="page-item"><a class="page-link" href="#" id="prev">Previous</a></li>
-            `;
-
-            for (let i = 1; i <= totalPages; i++) {
-                pagination.innerHTML += `
-                    <li class="page-item" data-page="${i}">
-                        <a class="page-link" href="#">${i}</a>
-                    </li>
-                `;
-            }
-
-            pagination.innerHTML += `
-                <li class="page-item"><a class="page-link" href="#" id="next">Next</a></li>
-            `;
-
-            pagination.querySelectorAll("a").forEach(a => {
-                a.addEventListener("click", function (e) {
-                    e.preventDefault();
-                    let page = this.parentElement.getAttribute("data-page");
-
-                    if (this.id === "prev") {
-                        let current = pagination.querySelector(".active")?.getAttribute("data-page");
-                        page = Math.max(1, parseInt(current) - 1);
-                    }
-                    if (this.id === "next") {
-                        let current = pagination.querySelector(".active")?.getAttribute("data-page");
-                        page = Math.min(totalPages, parseInt(current) + 1);
-                    }
-
-                    showPage(page);
-                });
-            });
-        }
-
-        if (totalPages > 1) {
-            createPagination();
-            showPage(1);
-        }
+        // 🔹 Load all users initially
+        $("#globalSearch").keyup();
     });
 </script>

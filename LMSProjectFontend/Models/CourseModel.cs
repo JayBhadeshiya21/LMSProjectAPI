@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Http;
+using System.Text.Json.Serialization;
 
 namespace LMSProjectFontend.Models
 {
@@ -21,21 +23,23 @@ namespace LMSProjectFontend.Models
         [Display(Name = "Teacher")]
         public int? TeacherId { get; set; }
 
+        // Optional - only needed when displaying teacher details in list/views
         public string? TeacherName { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        [Display(Name = "Created At")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;   
 
-        // For file upload (not mapped to DB)
-        [NotMapped]
-        [Display(Name = "Course Image")]
-        public IFormFile? CourseImage { get; set; }
-
-        // Stores the relative/absolute URL for frontend display
+        
+        [Display(Name = "Course Image URL")]
         public string? ImageUrl { get; set; }
 
-        // Optional: Store file system path (if needed for backend use)
-        public string? ImagePath { get; set; }
+        // File upload (ignored in DB and JSON)
+        [NotMapped]
+        [JsonIgnore]
+        [Display(Name = "Upload Course Image")]
+        public IFormFile? CourseImage { get; set; }
     }
+
 
     public class TeacherDropdownDto
     {
@@ -45,14 +49,10 @@ namespace LMSProjectFontend.Models
 
     public class PagedResponse<T>
     {
-        public int TotalRecords { get; set; }
+        public List<T> Data { get; set; } = new List<T>();
+        public int TotalCount { get; set; }
         public int PageNumber { get; set; }
         public int PageSize { get; set; }
         public int TotalPages { get; set; }
-        public List<T> Data { get; set; } = new List<T>();
     }
-
-
-
-
 }

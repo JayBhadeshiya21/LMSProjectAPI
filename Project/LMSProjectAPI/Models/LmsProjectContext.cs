@@ -56,6 +56,9 @@ public partial class LmsProjectContext : DbContext
         {
             entity.HasKey(e => e.EnrollmentId).HasName("PK__Enrollme__7F68771BB8F82EEC");
 
+            entity.Property(e => e.EnrollmentId)
+         .ValueGeneratedOnAdd();
+
             entity.Property(e => e.EnrolledOn)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");

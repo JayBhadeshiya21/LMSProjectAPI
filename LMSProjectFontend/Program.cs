@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Server.IIS;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Http.Features;
+using LMSProjectFontend.Models;
 
 namespace LMSProjectFontend
 {
@@ -19,7 +20,7 @@ namespace LMSProjectFontend
             builder.Services.AddHttpClient();
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<AuthService>();
-
+           
             // ✅ Enable Session for JWT storage
             builder.Services.AddSession(options =>
             {
